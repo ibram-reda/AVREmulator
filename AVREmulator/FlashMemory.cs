@@ -45,5 +45,6 @@ public class FlashMemory
     public FlashMemory(ProgramBus programBus)
     {
         _programBus = programBus;
+        _programBus.flashMemory = this;
     }
 }

@@ -7,7 +7,7 @@ public class AVRController
     private readonly FlashMemory _flashMemory;
     private readonly ProgramBus _programBus;
     private readonly DataBus _dataBus;
-
+    
     public CPU CPU => _cpu;
     public Ram Ram => _ram;
     public FlashMemory FlashMemory => _flashMemory;
@@ -32,11 +32,14 @@ public class AVRController
     /// <summary>
     /// connect a vcc to the controller
     /// </summary>
-    /// <exception cref="NotImplementedException"></exception>
     public void PowerUp()
     {
         Reset();
-        throw new NotImplementedException();
+        var consumedCycles = 0;
+        while (consumedCycles < 1000)
+        {
+            consumedCycles += _cpu.RunNextInstuction();
+        }
     }
 
     /// <summary>
