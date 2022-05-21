@@ -3,6 +3,7 @@
 public class FlashMemory
 {
     public const int MEMORY_MAX_SIZE = 0xffff;
+    private readonly ProgramBus _programBus;
     public UInt16[] Memory = new UInt16[MEMORY_MAX_SIZE];
 
     /// <summary>
@@ -34,13 +35,15 @@ public class FlashMemory
         }
     }
     /// <summary>
-    /// clear Ram on power up or reset
+    /// flash should not reset ever
     /// </summary>
     public void Reset()
     {
-        for (int i = 0; i < Memory.Length; i++)
-        {
-            Memory[i] = 0;
-        }
+        // do not delete the mrmory of the flash
+    }
+
+    public FlashMemory(ProgramBus programBus)
+    {
+        _programBus = programBus;
     }
 }

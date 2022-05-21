@@ -4,6 +4,12 @@ public class Ram
 {
     public const int RAM_MAX_SIZE = 0xffff;
     public byte[] RAM = new byte[RAM_MAX_SIZE];
+    private DataBus _dataBus;
+
+    public Ram(DataBus dataBus)
+    {
+        _dataBus = dataBus;
+    }
 
     /// <summary>
     /// Read value from rame

@@ -10,11 +10,17 @@ public class CPU
     /// Program counter
     /// </summary>
     public UInt16 PC { get; set; } = 0;
+    /// <summary>
+    /// Status Register
+    /// </summary>
+    public byte SReg { get; set; } = 0;
 
     /// <summary>
     /// array of general perpose registers r0-r31
     /// </summary>
     public readonly byte[] r = new byte[32];
+    private readonly DataBus _dataBus;
+    private readonly ProgramBus _programBus;
 
     #region registers
     public byte r0  { get => r[0];  set => r[0] = value; }
@@ -56,18 +62,34 @@ public class CPU
     #endregion
 
 
-    public CPU()
+    public CPU(DataBus dataBus,ProgramBus programBus)
     {
         Reset();
+        _dataBus = dataBus;
+        _programBus = programBus;
     }
 
+    /// <summary>
+    /// Reset the cpu 
+    /// make all register take the default values
+    /// </summary>
     public void Reset()
     {
         SP = UInt16.MaxValue;
         PC = 0;
+        SReg = 0;
         for(int i=0;i<32;i++)
         {
             r[i] = 0;
         }
     }
+
+
+    public int ExecuteInstruction()
+    {
+        PC++;
+        throw new NotImplementedException();
+        return 0;
+    }
+
 }
