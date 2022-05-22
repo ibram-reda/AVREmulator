@@ -1,10 +1,15 @@
 ﻿namespace AVREmulator;
 
-public class HexFileManger
+public class CodeBurnerEmulator
 {
-    public static void Load(string hexFilePath, FlashMemory flashMemory)
+    public static void LoadFromObjFile(string objFilePath,FlashMemory flashMemory)
+    {
+        throw new NotImplementedException();
+    }
+    public static void LoadFromHexFile(string hexFilePath, FlashMemory flashMemory)
     {
         using StreamReader streamReader = new StreamReader(hexFilePath);
+        int segAddres = 0;
         while (!streamReader.EndOfStream)
         {
             string line = streamReader.ReadLine() ?? "";
@@ -12,15 +17,18 @@ public class HexFileManger
             switch (ParsedLine.LineType)
             {
                 case 00:
-                    flashMemory.Load(ParsedLine.Address / 2, ParsedLine.Data);
+                    int absoluteAddress = (segAddres << 4) + ParsedLine.Address;
+                    flashMemory.Load(absoluteAddress / 2, ParsedLine.Data.TOFlashWordArray());
                     break;
                 case 01:
                     // end of transment
                     return;
                 case 02:
                     // segment swtichng
-                    throw new NotImplementedException("Extended Intel Hex not suported yet");
-                default: throw new ArgumentException("not known line type!", nameof(ParsedLine.LineType));
+                    
+                    segAddres = Extentions.Combine(ParsedLine.Data[0], ParsedLine.Data[1]);
+                    break;
+                default: throw new ArgumentException("not suported line type!", nameof(ParsedLine.LineType));
             }
 
 
@@ -45,13 +53,11 @@ internal class LineDiscription
         string lineType = line.Substring(7, 2);
         LineType = Convert.ToUInt16(lineType, 16);
 
-        Data = new UInt16[Size / 2];
-        for (int i = 0; i < Size / 2; i++)
+        Data = new byte[Size];
+        for (int i = 0; i < Size; i++)
         {
-            string Low = line.Substring(9 + i * 4, 2);
-            string High = line.Substring(11 + i * 4, 2);
-            string val = High + Low;
-            Data[i] = Convert.ToUInt16(val, 16);
+            string d = line.Substring(9 + i * 2, 2);
+            Data[i] = Convert.ToByte(d, 16);
         }
 
         Print();
@@ -60,7 +66,7 @@ internal class LineDiscription
     public uint Size { get; set; }
     public UInt16 Address { get; set; }
     public uint LineType { get; set; }
-    public UInt16[] Data;
+    public byte[] Data;
 
     public byte GetCheckSum()
     {

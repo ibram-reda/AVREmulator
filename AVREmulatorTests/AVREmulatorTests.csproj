@@ -25,10 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="atmelTest.hex">
+    <None Update="AVRTestProgram\atmelTest.hex">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="ldiAndrjmp.hex">
+    <None Update="AVRTestProgram\ldiAndrjmp.hex">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

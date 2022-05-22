@@ -20,4 +20,13 @@ public class ExtentionsTest
         var actual = opcode.GetNipple(nipplenumber);
         Assert.Equal(expected, actual);
     }
+
+    [Fact]
+    public void CompineTest()
+    {
+        byte b1 = 0x5a;
+        byte b2 = 0x25;
+        var combine = Extentions.Combine(b1, b2);
+        Assert.Equal(0x5a25, combine);
+    }
 }

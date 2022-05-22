@@ -9,7 +9,7 @@ public class HexFileMangerTests
     public void LoadHexFileCorrectllyToRom()
     {
         FlashMemory flash = new(new());
-        HexFileManger.Load("atmelTest.hex", flash);
+        CodeBurnerEmulator.LoadFromHexFile(@".\AVRTestProgram\atmelTest.hex", flash);
 
         Assert.NotNull(flash.Memory);
 
@@ -49,7 +49,7 @@ public class HexFileMangerTests
         Assert.Equal(0x00B0, info.Address);
         Assert.Equal((uint)0, info.LineType);
         Assert.NotEmpty(info.Data);
-        Assert.Equal(8, info.Data.Length);
+        Assert.Equal(0x10, info.Data.Length);
     }
 }
 

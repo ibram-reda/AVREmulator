@@ -24,4 +24,27 @@ public static class Extentions
         
         return (byte)(opcode >> (4 * nippleNumper) & 0xf);
     }
+
+    public static UInt16[] TOFlashWordArray(this byte[] bytes)
+    {
+        int bytesCount = bytes.Length;
+        UInt16[] result = new UInt16[bytesCount/2];
+        for (int i = 0; i < bytesCount;i+=2)
+        {
+            bytes.AsEnumerable().GetEnumerator().MoveNext();
+            int low = bytes[i];
+            int high = bytes[i+1];
+            int compunation = high << 8 | low;
+            result[i/2] = (UInt16)compunation;
+
+        }
+        
+        return result;
+    }
+
+    public static UInt16 Combine(byte HighByte, byte LowByte)
+    {
+        int combined = HighByte << 8 | LowByte;
+        return (UInt16)combined;
+    }
 }

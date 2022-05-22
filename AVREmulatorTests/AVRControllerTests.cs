@@ -13,7 +13,7 @@ public class AVRControllerTests
     [Fact]
     public void PowerUP_Test()
     {
-        AVRController Controller = new("ldiAndrjmp.hex");
+        AVRController Controller = new(@".\AVRTestProgram\ldiAndrjmp.hex");
         Controller.PowerUp();
 
         Assert.Equal(0x29, Controller.CPU.r18);

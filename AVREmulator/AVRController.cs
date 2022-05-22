@@ -26,7 +26,7 @@ public class AVRController
         _ram = new(_dataBus);
         _flashMemory = new(_programBus);
 
-        HexFileManger.Load(programHexPath, _flashMemory);
+        CodeBurnerEmulator.LoadFromHexFile(programHexPath, _flashMemory);
     }
 
     /// <summary>
