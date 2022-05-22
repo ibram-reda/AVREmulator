@@ -33,10 +33,15 @@ public class CPUTests
     {
         CPU cpu = new CPU(new(), new());
         
-        var action = cpu.LDi(opcode);
-        action.Invoke();
+        var instruction = cpu.LDi(opcode);
+        instruction.Executable.Invoke();
 
-        Assert.Equal(k, cpu.r[d]);
+        Assert.Equal(k, cpu.r[d]); // << most important
+        Assert.Equal("LDI", instruction.Verb);
+        Assert.Equal($"r{d}", instruction.Operand1);
+        Assert.Equal($"LDI r{d}, 0x{k:x2}",instruction.Mnemonics,ignoreCase:true);
+        Assert.Equal(1, instruction.WestedCycle);
+
     }
 
     [Theory]
@@ -48,42 +53,42 @@ public class CPUTests
     {
         CPU cpu = new CPU(new(), new());
 
-        var action = cpu.DecodeInstruction(opcode);
-        action.Invoke();
+        var instruction = cpu.DecodeInstruction(opcode);
 
-        Assert.Equal(k, cpu.r[d]);
+        Assert.Equal($"LDI r{d}, 0x{k:x2}",instruction.Mnemonics,ignoreCase:true);
+        Assert.Equal("LDI", instruction.Verb);
+        Assert.Equal($"r{d}", instruction.Operand1);
     }
     [Theory]
     [InlineData(0xcfff,0x12,0x12)]
     [InlineData(0xcffE,0x12,0x11)]
     [InlineData(0xc002,0x12,0x15)]
-    public void RJMP(ushort opcode,int pc,int ExpectedPC)
+    public void RJMP_Factory_test(ushort opcode,int pc,int ExpectedPC)
     {
         CPU cpu = new CPU(new(), new());
         cpu.PC = pc;
 
-        var action = cpu.RJMP(opcode);
-        var cycles = action.Invoke();
+        var instruction = cpu.RJMP(opcode);
+        instruction.Executable.Invoke();
 
         Assert.Equal(ExpectedPC, cpu.PC);
-        Assert.Equal(2, cycles);
-
+        Assert.Equal("RJMP", instruction.Verb);
+        Assert.Equal(2, instruction.WestedCycle);
     }
 
     [Theory]
-    [InlineData(0xcfff, 0x12, 0x12)]
-    [InlineData(0xcffE, 0x12, 0x11)]
-    [InlineData(0xc002, 0x12, 0x15)]
-    public void DecodeInstruction_RJMP_test(ushort opcode, int pc, int ExpectedPC)
+    [InlineData(0xcfff, 0x12,  -01)]
+    [InlineData(0xcffE, 0x12, -02)]
+    [InlineData(0xc002, 0x12,  02)]
+    public void DecodeInstruction_RJMP_test(ushort opcode, int pc, int k)
     {
         CPU cpu = new CPU(new(), new());
         cpu.PC = pc;
 
-        var action = cpu.DecodeInstruction(opcode);
-        var cycles = action.Invoke();
+        var instruction = cpu.DecodeInstruction(opcode);
 
-        Assert.Equal(ExpectedPC, cpu.PC);
-        Assert.Equal(2, cycles);
-
+        Assert.Equal("RJMP", instruction.Verb);
+        Assert.Equal(2, instruction.WestedCycle);
+        Assert.Equal($"RJMP 0x{k:x3}", instruction.Mnemonics, ignoreCase: true);
     }
 }

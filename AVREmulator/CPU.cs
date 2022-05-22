@@ -1,5 +1,27 @@
 ﻿namespace AVREmulator;
 
+/// <summary>
+/// CPU Executable instraction 
+/// it contains a meta data about the instraction 
+/// as well as The executable instruction itself
+/// </summary>
+public class CPUInstruction
+{
+    public string Mnemonics { get; set; } = string.Empty;
+    public string Verb { get; set; } = string.Empty;
+    public string? Operand1 { get; set; }
+    public string? Operand2 { get; set; }
+    public Action Executable { get; set; }
+    public int  WestedCycle { get; set; }
+}
+
+/// <summary>
+/// a class to Emulate the real AVR CPU,  it contains all register insed the avr cpu
+/// and also contains all the logic suported by the instruction of avr cpu
+/// <br/>
+/// CPU is comunicate and controll ram and other peripherals through <see cref="DataBus"/> and <see cref="ProgramBus"/> to get Data and code respectivley
+/// so we should pass them as a constractor dependancy
+/// </summary>
 public class CPU
 {
     #region registers
@@ -62,6 +84,11 @@ public class CPU
     #endregion
 
     #region ctor
+    /// <summary>
+    /// Emulate the real AVR CPU,  it contains all register and instruction set behaviors
+    /// </summary>
+    /// <param name="dataBus">data bus which allow cpu to comunicate with ram and other peripherals sauch as Timer,ADC,URT..etc</param>
+    /// <param name="programBus">program /or code bus is used to fetch next Instruction opcode from Flash memory </param>
     public CPU(DataBus dataBus, ProgramBus programBus)
     {
         Reset();
@@ -85,12 +112,23 @@ public class CPU
             r[i] = 0;
         }
     }
+  
+    /// <summary>
+    /// Fetch Opcode from Flash Memory
+    /// </summary>
+    /// <returns>the opcode in location of program counter register</returns>
     public UInt16 FetchInstruction()
     {
         return _programBus.flashMemory.Read(PC);
     }
 
-    public Func<int> DecodeInstruction(UInt16 opcode)
+    /// <summary>
+    /// undarstnd the opcode and translate it to the corsponding instruction
+    /// </summary>
+    /// <param name="opcode"></param>
+    /// <returns>CPU executable instruction</returns>
+    /// <exception cref="NotImplementedException"></exception>
+    public CPUInstruction DecodeInstruction(UInt16 opcode)
     {
         var lastNipple = (opcode & 0xf000);
 
@@ -109,23 +147,40 @@ public class CPU
                 throw new NotImplementedException("this instruction not implemented yet");
         }
     }
-    public int ExecuteInstruction(Func<int> action)
+    /// <summary>
+    /// execute an cpu executable Instruction
+    /// </summary>
+    /// <param name="action"></param>
+    /// <returns>number of consumed cycles</returns>
+    public int ExecuteInstruction(CPUInstruction instruction)
     {
-        return action.Invoke();
+        instruction.Executable.Invoke();
+        return instruction.WestedCycle;
     }
     public int RunNextInstuction()
     {
-        var code = FetchInstruction();
-        var action = DecodeInstruction(code);
-        return ExecuteInstruction(action);
+        var opcode = FetchInstruction();
+        var instruction = DecodeInstruction(opcode);
+        return ExecuteInstruction(instruction);
     }
     #endregion
 
     #region cpu Instruction factories
-    public Func<int> LDi(UInt16 opcode)
+    /// <summary>
+    /// Factory method which response for Decoding any LDI (load immadiate) instruction 
+    /// <br/>
+    /// LDI Rd,k 
+    /// </summary>
+    /// <param name="opcode"></param>
+    /// <returns>Executable instraction represent the opcode</returns>
+    /// <exception cref="ArgumentException"> if the opcode is not for LDI instruction </exception>
+    public CPUInstruction LDi(UInt16 opcode)
     {
         // ldi Rd,k
         // 1110 kkkk dddd kkkk
+        // opcode should be cxxx
+        if ((opcode & 0xF000) != 0xE000)
+            throw new ArgumentException("wrong opcode handler!", nameof(opcode));
 
         var d = opcode.GetNipple(1) | 0x10;
         if (!(16 <= d & d <= 31))
@@ -134,16 +189,23 @@ public class CPU
         byte kl = opcode.GetNipple(0);
         byte k = (byte)((kh << 4) | (kl));
 
-        return () =>
+        return new CPUInstruction
         {
-            r[d] = k;
-            PC++;
-            return 1;
-        };
+            Mnemonics = $"LDI r{d}, 0x{k:X2}",
+            Verb ="LDI",
+            Operand1=$"r{d}",
+            Operand2=$"0x{k:x2}",
+            Executable = () =>
+            {
+                r[d] = k;
+                PC++;
+            },
+            WestedCycle = 1
+        };               
 
     }
 
-    public Func<int> CPi(UInt16 opcode)
+    public CPUInstruction CPi(UInt16 opcode)
     {
         var d = opcode.GetNipple(1) | 0x10;
         if (!(16 <= d & d <= 31))
@@ -152,50 +214,62 @@ public class CPU
         byte kl = opcode.GetNipple(0);
         byte k = (byte)((kh << 4) | (kl));
 
-        return () =>
-        {
-            // test for z flag
-            if (k.Equals(r[d]))
-                SetFlag(Flag.Z);
-            else
-                ClearFlag(Flag.Z);
-            // test for h flag
-            var rl = r[d] & 0x0f;
-            var result = rl + kl;
-            if ((result & 1 << 4) !=0)
-                SetFlag(Flag.H);
-            else
-                ClearFlag(Flag.H);
-
-            // test for v flage
-            // test for n flage
-            //
-            throw new NotImplementedException("cpi instruction not implemented yet");
-        };
+        throw new NotImplementedException("cpi instruction not implemented yet");
+        //return () =>
+        //{
+        //    // test for z flag
+        //    if (k.Equals(r[d]))
+        //        SetFlag(Flag.Z);
+        //    else
+        //        ClearFlag(Flag.Z);
+        //    // test for h flag
+        //    var rl = r[d] & 0x0f;
+        //    var result = rl + kl;
+        //    if ((result & 1 << 4) !=0)
+        //        SetFlag(Flag.H);
+        //    else
+        //        ClearFlag(Flag.H);
+        //
+        //    // test for v flage
+        //    // test for n flage
+        //    //
+        //};
     }
 
-    public Func<int> SBCi(UInt16 opcode)
+    public CPUInstruction SBCi(UInt16 opcode)
     {
         throw new NotImplementedException();
     }
 
-    public Func<int> SUBi(UInt16 ocode)
+    public CPUInstruction SUBi(UInt16 ocode)
     {
         throw new NotImplementedException();
     }
 
-    public Func<int> ORi(UInt16 ocode)
+    public CPUInstruction ORi(UInt16 ocode)
     {
         throw new NotImplementedException();
     }
 
-    public Func<int> ANDi(UInt16 ocode)
+    public CPUInstruction ANDi(UInt16 ocode)
     {
         throw new NotImplementedException();
     }
 
-    public Func<int> RJMP(UInt16 opcode)
+    /// <summary>
+    /// Factory method which response for Decoding any RJMP (relative jump) instruction 
+    /// <br/>
+    /// RJMP z
+    /// </summary>
+    /// <param name="opcode"></param>
+    /// <returns>Executable instraction represent the opcode</returns>
+    /// <exception cref="ArgumentException"></exception>
+    public CPUInstruction RJMP(UInt16 opcode)
     {
+        // opcode should be cxxx
+        if ((opcode & 0xf000) != 0xc000)
+            throw new ArgumentException("wrong opcode handler!",nameof(opcode));
+
         int k = opcode & 0x0fff;
         // check if it negative value
         if ( (k & 0x0800) != 0)
@@ -204,14 +278,18 @@ public class CPU
             k = onceComplement & (0x0fff);
             k = -k;
         }
-        return () =>
+
+        return new CPUInstruction
         {
-            PC = PC + k + 1;
-            return 2; // west two cycle
+            Mnemonics = $"RJMP 0X{k:x3}",
+            Verb = "RJMP",
+            Operand1 = $"0x{k:x3}",
+            Executable = () => PC += k + 1,
+            WestedCycle = 2
         };
     }
 
-    public Func<int> RCALL(UInt16 ocode)
+    public CPUInstruction RCALL(UInt16 ocode)
     {
         throw new NotImplementedException();
     }
