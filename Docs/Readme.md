@@ -1,3 +1,18 @@
+# AVR Emulator Components
+We will emulate each part of AVR controller separately. And the following is the basic and essential components
+1. CPU
+2. RAM
+3. ROM
+4. DATA Bus
+5. Program Bus
+
+After we finish of building this basic component, then we will add other components which represent peripheral devices such as Timer,ADC,USRT,I2C,SPI,...etc
+
+The most important component in our emulator is CPU part wich is consist basiclly of three main functionallity
+1. `FetchInstruction` get opcode from flash memory
+2. `DecodeInstruction` take the opcode and understand it and return an Executable instruction for that opcode  
+3. `ExecuteInstruction` Execute an executable instraction and return how many cycle this instruction consumed
+
 ## CPU  instruction 
 here is samury of supported instruction (check :heavy_check_mark: means that is alredy implemented in our emulator)
 
