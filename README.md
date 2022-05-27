@@ -31,7 +31,7 @@ We should instantiate an object of type `AVRController` and give it your AVR cod
 AVRController Controller = new(@".\path\to\yourprogram.hex");
 Controller.PowerUp();
 ```
-**Note that**: the emulator is still not support all kind of AVR instructions so it will probably file to execute the hex file. you can see all [supported instruction in our emulator][3]
+**Note that**: the emulator is still not support all kind of AVR instructions so it will probably fail to execute the hex file. you can see all [supported instruction in our emulator][3]
 
 the following is a simple code example can run and test with our emulator
 ```asm
