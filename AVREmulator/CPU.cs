@@ -130,23 +130,34 @@ public class CPU
     /// <exception cref="NotImplementedException"></exception>
     public CPUInstruction DecodeInstruction(UInt16 opcode)
     {
-        var lastNipple = (opcode & 0xf000);
+        var lastNipple = opcode.GetNipple(3);
 
         switch (lastNipple)
         {
+            case 0x0: return Group0(opcode);
+            case 0x1: return Group1(opcode);
+            case 0x2: return Group2(opcode);
+            case 0x3: return CPi(opcode);
+            case 0x4: return SBCi(opcode);
+            case 0x5: return SUBi(opcode);
+            case 0x6: return ORi(opcode);
+            case 0x7: return ANDi(opcode);
+            case 0x8: return Group8(opcode);
+            case 0x9: return Group9(opcode);
+            case 0xA: return GroupA(opcode);
+            case 0xB: return GroupB(opcode);
+            case 0xC: return RJMP(opcode);
+            case 0xD: return RCALL(opcode);
+            case 0xE: return LDi(opcode);
+            case 0xF: return GroupF(opcode);
 
-            case 0x3000: return CPi(opcode);
-            case 0x4000: return SBCi(opcode);
-            case 0x5000: return SUBi(opcode);
-            case 0x6000: return ORi(opcode);
-            case 0x7000: return ANDi(opcode);
-            case 0xC000: return RJMP(opcode);
-            case 0xD000: return RCALL(opcode);
-            case 0xE000: return LDi(opcode);
             default:
-                throw new NotImplementedException("this instruction not implemented yet");
+                throw new Exception("something went wrong,should not reach that line ever");
         }
     }
+
+    
+
     /// <summary>
     /// execute an cpu executable Instruction
     /// </summary>
@@ -166,6 +177,59 @@ public class CPU
     #endregion
 
     #region cpu Instruction factories
+
+    public CPUInstruction Group0(UInt16 opcode)
+    {
+        if (opcode.GetNipple(3) != 0)
+            throw new ArgumentException("Wrong Decoding handller");
+
+        if (opcode == 0) // nop operation
+            return new CPUInstruction
+            {
+                Mnemonics = "NOP",
+                Verb = "NOP",
+                Executable = () => PC++,
+                WestedCycle = 1,
+            };
+        switch (opcode.GetNipple(2))
+        {
+                
+            case 0x1:return MOVW(opcode);
+            default:
+                throw new ArgumentException("Opcode is Reserved or not supported by Emulator");
+        }
+
+    }
+    public CPUInstruction Group1(ushort opcode)
+    {
+        throw new NotImplementedException();
+    }
+    public CPUInstruction Group2(ushort opcode)
+    {
+        throw new NotImplementedException();
+    }
+    public CPUInstruction Group8(ushort opcode)
+    {
+        throw new NotImplementedException();
+    }
+    public CPUInstruction Group9(ushort opcode)
+    {
+        throw new NotImplementedException();
+    }
+    public CPUInstruction GroupA(ushort opcode)
+    {
+        throw new NotImplementedException();
+    }
+    public CPUInstruction GroupB(ushort opcode)
+    {
+        throw new NotImplementedException();
+    }
+    public CPUInstruction GroupF(ushort opcode)
+    {
+        throw new NotImplementedException();
+    }
+
+
     /// <summary>
     /// Factory method which response for Decoding any LDI (load immadiate) instruction 
     /// <br/>
@@ -173,7 +237,60 @@ public class CPU
     /// </summary>
     /// <param name="opcode"></param>
     /// <returns>Executable instraction represent the opcode</returns>
-    /// <exception cref="ArgumentException"> if the opcode is not for LDI instruction </exception>
+    /// <exception cref="ArgumentException"> if the opcode is not for LDI instruction </exception>  
+    public CPUInstruction MOVW(UInt16 opcode)
+    {
+        int sourceReg= opcode.GetNipple(0)*2;
+        int distReg = opcode.GetNipple(1)*2;
+        return new CPUInstruction
+        {
+            Mnemonics = $"MOVW r{distReg},r{sourceReg}",
+            Verb = "MOVW",
+            Operand1 = $"r{distReg}",
+            Operand2 = $"r{sourceReg}",
+            Executable = () =>
+            {
+                r[distReg] = r[sourceReg];
+                r[distReg+1] = r[sourceReg+1];
+                PC++;
+            },
+            WestedCycle = 1
+        };
+
+
+    }
+    public CPUInstruction MULS(UInt16 opcode)
+    {
+        //Multiply Signed
+        // muls Rd,Rr
+        int d = opcode.GetNipple(1) + 0x10;
+        int source = opcode.GetNipple(0) + 0x10;
+        return new CPUInstruction
+        {
+            Mnemonics = $"MULS r{d}, r{source}",
+            Verb = "MULS",
+            Operand1 = $"r{d}",
+            Operand2 = $"r{source}",
+            Executable = () =>
+            {
+                int result = (int)((sbyte)r[d] * (sbyte)r[source]);
+                r[0] = (byte)result;
+                r[1] = (byte)(result >> 8);
+                if (r0 == 0 && r1==0)
+                    SetFlag(Flag.Z);
+                else ClearFlag(Flag.Z);
+
+                if (result > short.MaxValue || result < short.MinValue )
+                    SetFlag(Flag.C);
+                else ClearFlag(Flag.C);
+
+                PC++;
+            },
+            WestedCycle = 1,
+
+        };
+
+    }
     public CPUInstruction LDi(UInt16 opcode)
     {
         // ldi Rd,k
@@ -310,6 +427,8 @@ public class CPU
     /// status regesters
     public void SetFlag(Flag flag) => SReg = (byte)(SReg | 1<<(int)flag);
     public void ClearFlag(Flag flag) => SReg = (byte)(SReg & ~(1<<(int)flag));
+
+    public bool GetFlag(Flag flag) => (SReg & (1 << (int)flag)) == 1;
     #endregion
 
 }
