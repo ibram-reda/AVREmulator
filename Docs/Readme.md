@@ -147,3 +147,5 @@ here is samury of supported instruction (check :heavy_check_mark: means that is 
   </tr>  
 </tbody>
 </table>
+
+you can also see `Appendx A: AVR Instructions Explained` in the Book page 695
