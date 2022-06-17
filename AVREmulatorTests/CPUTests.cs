@@ -43,6 +43,41 @@ public class CPUTests
     }
 
     [Theory]
+    [InlineData(0x2C01,  0,  1)]
+    [InlineData(0x2c60,  6,  0)]
+    [InlineData(0x2Ce5, 14,  5)]
+    [InlineData(0x2Cff, 15, 15)]
+    [InlineData(0x2d01, 16,  1)]
+    [InlineData(0x2d1f, 17, 15)]
+    [InlineData(0x2da0, 26,  0)]
+    [InlineData(0x2df8, 31,  8)]
+    [InlineData(0x2e00,  0, 16)]
+    [InlineData(0x2e51,  5, 17)]
+    [InlineData(0x2eff, 15, 31)]
+    [InlineData(0x2f00, 16, 16)]
+    [InlineData(0x2fed, 30, 29)]
+    [InlineData(0x2fc0, 28, 16)]
+    [InlineData(0x2fff, 31, 31)]
+    public void DecodeInstruction_MOv_test(ushort opcode,  int dest, int source)
+    {
+        string mnemonics = $"MOV r{dest}, r{source}";
+        CPU cpu = new CPU(new(), new());
+        cpu.r[dest] = 0xca;
+        cpu.r[source] = 0xfb;
+
+        var instruction = cpu.DecodeInstruction(opcode);
+
+        Assert.Equal(mnemonics, instruction.Mnemonics);
+        Assert.Equal("MOV", instruction.Verb);
+
+        instruction.Executable.Invoke();
+
+        Assert.Equal(0xfb, cpu.r[dest]);
+        Assert.Equal(0xfb, cpu.r[source]);
+
+    }
+   
+    [Theory]
     [InlineData(0xef0f, 16, 0xff)] // ldi r16,0xff
     [InlineData(0xefff, 31, 0xff)] // ldi r31,0xff
     [InlineData(0xe512, 17, 0x52)] // ldi r17,0x52

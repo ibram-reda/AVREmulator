@@ -61,7 +61,7 @@ here is samury of supported instruction (check :heavy_check_mark: means that is 
     <td colspan="4">and</td>
     <td colspan="4">eor</td>
     <td colspan="4">or</td>
-    <td colspan="4">mov</td>
+    <td colspan="4">mov :heavy_check_mark:</td>
   </tr>
   <tr>
     <td>3xzz</td>

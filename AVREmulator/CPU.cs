@@ -355,7 +355,24 @@ public class CPU
 
     private CPUInstruction MOV(UInt16 opcode)
     {
-        throw new NotImplementedException();
+        // 0010 11rd dddd rrrr
+        if ((opcode & 0x2c00) != 0x2c00)
+            throw new ArgumentException("wrong Decoder handler!");
+        var d = opcode.GetNipple(1) + (opcode.GetBit(8)? 0x10:0);
+        var source = opcode.GetNipple(0) + (opcode.GetBit(9) ? 0x10 : 0);
+
+        return new CPUInstruction
+        {
+            Mnemonics = $"MOV r{d}, r{source}",
+            Verb = "MOV",
+            WestedCycle = 1,
+            Executable = () =>
+            {
+                r[d] = r[source];
+                PC++;
+            }
+        };
+
     }
 
     private CPUInstruction LDi(UInt16 opcode)

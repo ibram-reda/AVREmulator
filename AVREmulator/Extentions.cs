@@ -25,6 +25,18 @@ public static class Extentions
         return (byte)(opcode >> (4 * nippleNumper) & 0xf);
     }
 
+    /// <summary>
+    /// Get the corresponding Bit value 
+    /// zero based index
+    /// </summary>
+    /// <param name="opcode"></param>
+    /// <param name="bitNumper">number between 0 and 15</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    public static bool GetBit(this UInt16 opcode, int bitNumper)
+    {
+        return (opcode & (1 << bitNumper)) != 0;
+    }
     public static UInt16[] TOFlashWordArray(this byte[] bytes)
     {
         int bytesCount = bytes.Length;
