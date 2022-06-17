@@ -178,58 +178,119 @@ public class CPU
 
     #region cpu Instruction factories
 
-    public CPUInstruction Group0(UInt16 opcode)
+    /// <summary>
+    /// decode any opcode start with 0
+    /// </summary>
+    /// <param name="opcode">opcode look like 0x0kkk</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException">if the opcode desnote start with 0</exception>
+    private CPUInstruction Group0(UInt16 opcode)
     {
         if (opcode.GetNipple(3) != 0)
             throw new ArgumentException("Wrong Decoding handller");
-
-        if (opcode == 0) // nop operation
-            return new CPUInstruction
-            {
-                Mnemonics = "NOP",
-                Verb = "NOP",
-                Executable = () => PC++,
-                WestedCycle = 1,
-            };
+                
         switch (opcode.GetNipple(2))
         {
-                
+            case 0x0: return NOP(opcode);    
             case 0x1:return MOVW(opcode);
             default:
                 throw new ArgumentException("Opcode is Reserved or not supported by Emulator");
         }
 
     }
-    public CPUInstruction Group1(ushort opcode)
+    /// <summary>
+    /// decode any opcode start with 1
+    /// </summary>
+    /// <param name="opcode">opcode look like 0x1kkk</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException">if the opcode desnote start with 1</exception>   
+    private CPUInstruction Group1(ushort opcode)
     {
         throw new NotImplementedException();
     }
-    public CPUInstruction Group2(ushort opcode)
+    /// <summary>
+    /// decode any opcode start with 2
+    /// </summary>
+    /// <param name="opcode">opcode look like 0x2kkk</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException">if the opcode desnote start with 2</exception>
+    private CPUInstruction Group2(ushort opcode)
+    {
+        if (opcode.GetNipple(3) != 2)
+            throw new ArgumentException("Wrong Decoding handller");
+        switch (opcode.GetNipple(2))
+        {
+            case 0XC: return MOV(opcode);
+            case 0XD: return MOV(opcode);
+            case 0XE: return MOV(opcode);
+            case 0XF: return MOV(opcode);
+        }
+        throw new NotImplementedException();
+    }
+    /// <summary>
+    /// decode any opcode start with 8
+    /// </summary>
+    /// <param name="opcode">opcode look like 0x8kkk</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException">if the opcode desnote start with 8</exception>
+    private CPUInstruction Group8(ushort opcode)
     {
         throw new NotImplementedException();
     }
-    public CPUInstruction Group8(ushort opcode)
+    /// <summary>
+    /// decode any opcode start with 9
+    /// </summary>
+    /// <param name="opcode">opcode look like 0x9kkk</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException">if the opcode desnote start with 9</exception>
+    private CPUInstruction Group9(ushort opcode)
     {
         throw new NotImplementedException();
     }
-    public CPUInstruction Group9(ushort opcode)
+    /// <summary>
+    /// decode any opcode start with A
+    /// </summary>
+    /// <param name="opcode">opcode look like 0xAkkk</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException">if the opcode desnote start with A</exception>
+    private CPUInstruction GroupA(ushort opcode)
     {
         throw new NotImplementedException();
     }
-    public CPUInstruction GroupA(ushort opcode)
+    /// <summary>
+    /// decode any opcode start with B
+    /// </summary>
+    /// <param name="opcode">opcode look like 0xBkkk</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException">if the opcode desnote start with B</exception>
+    private CPUInstruction GroupB(ushort opcode)
     {
         throw new NotImplementedException();
     }
-    public CPUInstruction GroupB(ushort opcode)
-    {
-        throw new NotImplementedException();
-    }
-    public CPUInstruction GroupF(ushort opcode)
+    /// <summary>
+    /// decode any opcode start with F
+    /// </summary>
+    /// <param name="opcode">opcode look like 0xFkkk</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException">if the opcode desnote start with F</exception>
+    private CPUInstruction GroupF(ushort opcode)
     {
         throw new NotImplementedException();
     }
 
 
+    private CPUInstruction NOP(UInt16 opcode)
+    {
+        if(opcode != 0)
+            throw new ArgumentException("Wrong Decoding handller");
+        return new CPUInstruction
+        {
+            Mnemonics = "NOP",
+            Verb = "NOP",
+            Executable = () => PC++,
+            WestedCycle = 1,
+        };
+    }
     /// <summary>
     /// Factory method which response for Decoding any LDI (load immadiate) instruction 
     /// <br/>
@@ -238,13 +299,13 @@ public class CPU
     /// <param name="opcode"></param>
     /// <returns>Executable instraction represent the opcode</returns>
     /// <exception cref="ArgumentException"> if the opcode is not for LDI instruction </exception>  
-    public CPUInstruction MOVW(UInt16 opcode)
+    private CPUInstruction MOVW(UInt16 opcode)
     {
         int sourceReg= opcode.GetNipple(0)*2;
         int distReg = opcode.GetNipple(1)*2;
         return new CPUInstruction
         {
-            Mnemonics = $"MOVW r{distReg},r{sourceReg}",
+            Mnemonics = $"MOVW r{distReg}, r{sourceReg}",
             Verb = "MOVW",
             Operand1 = $"r{distReg}",
             Operand2 = $"r{sourceReg}",
@@ -259,7 +320,7 @@ public class CPU
 
 
     }
-    public CPUInstruction MULS(UInt16 opcode)
+    private CPUInstruction MULS(UInt16 opcode)
     {
         //Multiply Signed
         // muls Rd,Rr
@@ -291,7 +352,13 @@ public class CPU
         };
 
     }
-    public CPUInstruction LDi(UInt16 opcode)
+
+    private CPUInstruction MOV(UInt16 opcode)
+    {
+        throw new NotImplementedException();
+    }
+
+    private CPUInstruction LDi(UInt16 opcode)
     {
         // ldi Rd,k
         // 1110 kkkk dddd kkkk
@@ -322,7 +389,7 @@ public class CPU
 
     }
 
-    public CPUInstruction CPi(UInt16 opcode)
+    private CPUInstruction CPi(UInt16 opcode)
     {
         var d = opcode.GetNipple(1) | 0x10;
         if (!(16 <= d & d <= 31))
@@ -353,22 +420,22 @@ public class CPU
         //};
     }
 
-    public CPUInstruction SBCi(UInt16 opcode)
+    private CPUInstruction SBCi(UInt16 opcode)
     {
         throw new NotImplementedException();
     }
 
-    public CPUInstruction SUBi(UInt16 ocode)
+    private CPUInstruction SUBi(UInt16 ocode)
     {
         throw new NotImplementedException();
     }
 
-    public CPUInstruction ORi(UInt16 ocode)
+    private CPUInstruction ORi(UInt16 ocode)
     {
         throw new NotImplementedException();
     }
 
-    public CPUInstruction ANDi(UInt16 ocode)
+    private CPUInstruction ANDi(UInt16 ocode)
     {
         throw new NotImplementedException();
     }
@@ -381,7 +448,7 @@ public class CPU
     /// <param name="opcode"></param>
     /// <returns>Executable instraction represent the opcode</returns>
     /// <exception cref="ArgumentException"></exception>
-    public CPUInstruction RJMP(UInt16 opcode)
+    private CPUInstruction RJMP(UInt16 opcode)
     {
         // opcode should be cxxx
         if ((opcode & 0xf000) != 0xc000)
@@ -406,7 +473,7 @@ public class CPU
         };
     }
 
-    public CPUInstruction RCALL(UInt16 ocode)
+    private CPUInstruction RCALL(UInt16 ocode)
     {
         throw new NotImplementedException();
     }

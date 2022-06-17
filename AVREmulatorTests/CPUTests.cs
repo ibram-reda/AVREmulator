@@ -24,24 +24,22 @@ public class CPUTests
         }
     }
 
-    [Theory]
-    [InlineData(0xef0f,16,0xff)] // ldi r16,0xff
-    [InlineData(0xefff,31,0xff)] // ldi r31,0xff
-    [InlineData(0xe512,17,0x52)] // ldi r17,0x52
-    [InlineData(0xe0d8, 29, 0x08)] // ldi	r29, 0x08
-    public void LDi_Factory_test(ushort opcode,int d,byte k)
+    [Fact]
+    public void DecodeInstruction_nop_test()
     {
+        ushort opcode = 0;
+        var pc = 52;
         CPU cpu = new CPU(new(), new());
-        
-        var instruction = cpu.LDi(opcode);
-        instruction.Executable.Invoke();
+        cpu.PC = pc;
 
-        Assert.Equal(k, cpu.r[d]); // << most important
-        Assert.Equal("LDI", instruction.Verb);
-        Assert.Equal($"r{d}", instruction.Operand1);
-        Assert.Equal($"LDI r{d}, 0x{k:x2}",instruction.Mnemonics,ignoreCase:true);
+        var instruction = cpu.DecodeInstruction(opcode);
+
+        Assert.Equal("NOP", instruction.Verb);
+        Assert.Equal("NOP", instruction.Mnemonics);
         Assert.Equal(1, instruction.WestedCycle);
 
+        instruction.Executable.Invoke();
+        Assert.Equal(pc + 1, cpu.PC);
     }
 
     [Theory]
@@ -58,29 +56,18 @@ public class CPUTests
         Assert.Equal($"LDI r{d}, 0x{k:x2}",instruction.Mnemonics,ignoreCase:true);
         Assert.Equal("LDI", instruction.Verb);
         Assert.Equal($"r{d}", instruction.Operand1);
-    }
-    [Theory]
-    [InlineData(0xcfff,0x12,0x12)]
-    [InlineData(0xcffE,0x12,0x11)]
-    [InlineData(0xc002,0x12,0x15)]
-    public void RJMP_Factory_test(ushort opcode,int pc,int ExpectedPC)
-    {
-        CPU cpu = new CPU(new(), new());
-        cpu.PC = pc;
+        Assert.Equal(1, instruction.WestedCycle);
 
-        var instruction = cpu.RJMP(opcode);
         instruction.Executable.Invoke();
 
-        Assert.Equal(ExpectedPC, cpu.PC);
-        Assert.Equal("RJMP", instruction.Verb);
-        Assert.Equal(2, instruction.WestedCycle);
+        Assert.Equal(k, cpu.r[d]); // << most important
     }
-
+    
     [Theory]
-    [InlineData(0xcfff, 0x12,  -01)]
-    [InlineData(0xcffE, 0x12, -02)]
-    [InlineData(0xc002, 0x12,  02)]
-    public void DecodeInstruction_RJMP_test(ushort opcode, int pc, int k)
+    [InlineData(0xcfff, 0x12, -01, 0x12)]
+    [InlineData(0xcffE, 0x12, -02, 0x11)]
+    [InlineData(0xc002, 0x12,  02, 0x15)]
+    public void DecodeInstruction_RJMP_test(ushort opcode, int pc, int k, int ExpectedPC)
     {
         CPU cpu = new CPU(new(), new());
         cpu.PC = pc;
@@ -90,43 +77,51 @@ public class CPUTests
         Assert.Equal("RJMP", instruction.Verb);
         Assert.Equal(2, instruction.WestedCycle);
         Assert.Equal($"RJMP 0x{k:x3}", instruction.Mnemonics, ignoreCase: true);
-    }
 
+        instruction.Executable.Invoke();
+
+        Assert.Equal(ExpectedPC, cpu.PC);
+    }
+    
     [Fact]
-    public void MOVW_Factory_test()
+    public void DecodeInstruction_MOVW_test()
     {
+        ushort opcode =  0x016E; // movw r12, r28
         CPU cpu = new CPU(new(), new());
         cpu.r28 = 0xf5;
         cpu.r29 = 0x68;
 
-        var instruction = cpu.MOVW(0x016E); // movw r12, r28
+        var instruction = cpu.DecodeInstruction(opcode);
         instruction.Executable.Invoke();
 
         Assert.Equal(cpu.r28, cpu.r12);
         Assert.Equal(cpu.r29, cpu.r13);
         Assert.Equal("MOVW", instruction.Verb);
         Assert.Equal(1, instruction.WestedCycle);
-
+        Assert.Equal("MOVW r12, r28", instruction.Mnemonics, ignoreCase:true);
     }
 
-    [Theory]
-    [InlineData(0xfb,10, 0xce, 0xff)] // -5 * 10 = 0xffce
-    [InlineData(0xfb,0xfb,25,0)] //-5*-5=25
-    [InlineData(5,5,25,0)] //5*5=25
-    [InlineData(5,0,0,0,true)] //5*0=0
-    [InlineData(80,1000,0x80,0x38,false,true)] //80*1000=80000 overflow
-    public void MULS_instruction_test(byte v1,byte v2,byte expectedr0,byte expectedr1,bool zFlag = false,bool cFlag =false)
-    {
-        CPU cpu = new CPU(new(), new());
-        cpu.r20 = v1; //-5
-        cpu.r21 = v2;
 
-        var instruction = cpu.MULS(0x0245);//MULS r20*r21
-        instruction.Executable.Invoke();
 
-        Assert.Equal(expectedr1, cpu.r1);
-        Assert.Equal(expectedr0, cpu.r0);
-        Assert.Equal(zFlag,cpu.GetFlag(CPU.Flag.Z));
-        Assert.Equal(cFlag,cpu.GetFlag(CPU.Flag.C));
-    }
+
+    //[Theory]
+    //[InlineData(0xfb,10, 0xce, 0xff)] // -5 * 10 = 0xffce
+    //[InlineData(0xfb,0xfb,25,0)] //-5*-5=25
+    //[InlineData(5,5,25,0)] //5*5=25
+    //[InlineData(5,0,0,0,true)] //5*0=0
+    //[InlineData(80,1000,0x80,0x38,false,true)] //80*1000=80000 overflow
+    //public void MULS_instruction_test(byte v1,byte v2,byte expectedr0,byte expectedr1,bool zFlag = false,bool cFlag =false)
+    //{
+    //    CPU cpu = new CPU(new(), new());
+    //    cpu.r20 = v1; //-5
+    //    cpu.r21 = v2;
+
+    //    var instruction = cpu.MULS(0x0245);//MULS r20*r21
+    //    instruction.Executable.Invoke();
+
+    //    Assert.Equal(expectedr1, cpu.r1);
+    //    Assert.Equal(expectedr0, cpu.r0);
+    //    Assert.Equal(zFlag,cpu.GetFlag(CPU.Flag.Z));
+    //    Assert.Equal(cFlag,cpu.GetFlag(CPU.Flag.C));
+    //}
 }
