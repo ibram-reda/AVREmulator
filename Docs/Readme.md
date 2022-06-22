@@ -96,7 +96,7 @@ here is samury of supported instruction (check :heavy_check_mark: means that is 
   </tr>
   <tr>
     <td>9xzz</td>
-    <td colspan="2">(MISC)</td>
+    <td colspan="2">(MISC) :heavy_check_mark:</td>
     <td colspan="2">112 [R], 16 push, 112 st, 16 sts</td>
     <td>(MISC)</td>
     <td>(MISC)</td>

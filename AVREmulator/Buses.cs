@@ -12,7 +12,7 @@ public class DataBus
     public UInt16 Address { get; set; }
     public ControllSignal Control { get; set; }
 
-    
+    public Ram Ram;
 }
 
 public class ProgramBus

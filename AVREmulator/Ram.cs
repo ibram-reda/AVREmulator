@@ -9,6 +9,7 @@ public class Ram
     public Ram(DataBus dataBus)
     {
         _dataBus = dataBus;
+        _dataBus.Ram = this;
     }
 
     /// <summary>

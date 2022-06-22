@@ -78,9 +78,21 @@ public class CPU
     public byte r30 { get => r[30]; set => r[30] = value; }
     public byte r31 { get => r[31]; set => r[31] = value; }
 
-    public UInt16 X { get => BitConverter.ToUInt16(r, 26); }
-    public UInt16 Y { get => BitConverter.ToUInt16(r, 28); }
-    public UInt16 Z { get => BitConverter.ToUInt16(r, 30); }
+    public UInt16 X
+    {
+        get => BitConverter.ToUInt16(r, 26);
+        set => BitConverter.GetBytes(value).CopyTo(r, 26);
+    }
+    public UInt16 Y 
+    {
+        get => BitConverter.ToUInt16(r, 28);
+        set => BitConverter.GetBytes(value).CopyTo(r, 28);
+    }
+    public UInt16 Z 
+    { 
+        get => BitConverter.ToUInt16(r, 30); 
+        set => BitConverter.GetBytes(value).CopyTo(r, 30); 
+    }
     #endregion
 
     #region ctor
@@ -187,7 +199,7 @@ public class CPU
     private CPUInstruction Group0(UInt16 opcode)
     {
         if (opcode.GetNipple(3) != 0)
-            throw new ArgumentException("Wrong Decoding handller");
+            throw new WrongDecoderHandlerException(); 
                 
         switch (opcode.GetNipple(2))
         {
@@ -217,7 +229,7 @@ public class CPU
     private CPUInstruction Group2(ushort opcode)
     {
         if (opcode.GetNipple(3) != 2)
-            throw new ArgumentException("Wrong Decoding handller");
+            throw new WrongDecoderHandlerException();
         switch (opcode.GetNipple(2))
         {
             case 0XC: return MOV(opcode);
@@ -235,6 +247,18 @@ public class CPU
     /// <exception cref="ArgumentException">if the opcode desnote start with 8</exception>
     private CPUInstruction Group8(ushort opcode)
     {
+        if (opcode.GetNipple(3) != 8)
+            throw new WrongDecoderHandlerException();
+        switch (opcode.GetNipple(2))
+        {
+            case 0:
+            case 1:
+                if (opcode.GetNipple(0) <= 7)
+                    return LD_Z(opcode);
+                else
+                    return LD_Y(opcode);
+                
+        }
         throw new NotImplementedException();
     }
     /// <summary>
@@ -245,6 +269,37 @@ public class CPU
     /// <exception cref="ArgumentException">if the opcode desnote start with 9</exception>
     private CPUInstruction Group9(ushort opcode)
     {
+        if (opcode.GetNipple(3) != 9)
+            throw new WrongDecoderHandlerException();
+
+        if (opcode == 0x95C8) return LPM(opcode);
+
+        switch (opcode.GetNipple(2))
+        {
+            case 0:
+            case 1:
+                var lastnipple = opcode.GetNipple(0);
+                switch (lastnipple)
+                {
+                    case 0x0: return LDS(opcode);
+                    case 0x1: return LD_Z(opcode);
+                    case 0x2: return LD_Z(opcode);
+                    case 0x3: throw new ReservedInstructionExaption();
+                    case 0x4: return LPM(opcode);
+                    case 0x5: return LPM(opcode);
+                    case 0x6: return ELPM(opcode);
+                    case 0x7: return ELPM(opcode);
+                    case 0x8: throw new ReservedInstructionExaption();
+                    case 0x9: return LD_Y(opcode);
+                    case 0xA: return LD_Y(opcode);
+                    case 0xB: throw new ReservedInstructionExaption();
+                    case 0xC: return LD_X(opcode);
+                    case 0xD: return LD_X(opcode);
+                    case 0xE: return LD_X(opcode);
+                    case 0xf: return POP(opcode);
+                }
+                break;
+        }
         throw new NotImplementedException();
     }
     /// <summary>
@@ -282,7 +337,7 @@ public class CPU
     private CPUInstruction NOP(UInt16 opcode)
     {
         if(opcode != 0)
-            throw new ArgumentException("Wrong Decoding handller");
+            throw new WrongDecoderHandlerException();
         return new CPUInstruction
         {
             Mnemonics = "NOP",
@@ -357,7 +412,7 @@ public class CPU
     {
         // 0010 11rd dddd rrrr
         if ((opcode & 0x2c00) != 0x2c00)
-            throw new ArgumentException("wrong Decoder handler!");
+            throw new WrongDecoderHandlerException();
         var d = opcode.GetNipple(1) + (opcode.GetBit(8)? 0x10:0);
         var source = opcode.GetNipple(0) + (opcode.GetBit(9) ? 0x10 : 0);
 
@@ -375,13 +430,337 @@ public class CPU
 
     }
 
+    /// <summary>
+    /// LD (LDD) – Load Indirect From Data Space to Register using Index X
+    /// </summary>
+    /// <param name="opcode"></param>
+    /// <returns></returns>
+    /// <exception cref="WrongDecoderHandlerException"></exception>
+    private CPUInstruction LD_X(UInt16 opcode)
+    {
+        // 1001_000d__dddd_1100 LD rd, X
+        // 1001_000d__dddd_1101 LD rd, X+
+        // 1001_000d__dddd_1110 LD rd, -X
+        if ((opcode & 0xfe0c) != 0x900c)
+            throw new WrongDecoderHandlerException();
+
+        var d = (opcode >> 4) & 0x1f;
+
+        switch (opcode.GetNipple(0))
+        {
+            case 0xC:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"LD r{d}, X",
+                    Verb = "LD",
+                    WestedCycle = 1,
+                    Executable = () =>
+                    {
+                        r[d] = _dataBus.Ram.Read(X);
+                        PC++;
+                    }
+                };
+            case 0xD:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"LD r{d}, X+",
+                    Verb = "LD",
+                    WestedCycle = 1,
+                    Executable = () =>
+                    {
+                        if (d == 26 || d == 27)
+                            throw new UndifiendBehaviorException(opcode, $"LD r{d}, X+");
+                        r[d] = _dataBus.Ram.Read(X++);
+                        PC++;
+                    }
+                };
+            case 0xE:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"LD r{d}, -X",
+                    Verb = "LD",
+                    WestedCycle = 2,
+                    Executable = () =>
+                    {
+                        if (d == 26 || d == 27)
+                            throw new UndifiendBehaviorException(opcode, $"LD r{d}, -X");
+                        r[d] = _dataBus.Ram.Read(--X);
+                        PC++;
+                    }
+                };
+        }
+        throw new Exception("unknown error code should not rich this point");
+    }
+    /// <summary>
+    /// LD (LDD) – Load Indirect From Data Space to Register using Index Y
+    /// </summary>
+    /// <param name="opcode"></param>
+    /// <returns></returns>
+    /// <exception cref="WrongDecoderHandlerException"></exception>
+    /// <exception cref="UndifiendBehaviorException"></exception>
+    /// <exception cref="NotImplementedException"></exception>
+    private CPUInstruction LD_Y(UInt16 opcode)
+    {
+        //1000_000d_dddd_1000  LD rd, Y
+        //1001_000d_dddd_1001  LD rd, Y+
+        //1001_000d_dddd_1010  LD rd, -Y
+        //10q0_qq0d_dddd_1qqq  LDD rd, Y+q ; << not implemented now
+        var mask = opcode & 0xfe0f;
+        if (! ( mask == 0x8008 ||
+             mask == 0x9009 ||
+             mask == 0x900A) )
+        {
+            throw new WrongDecoderHandlerException();
+        }
+
+        var d = (opcode >> 4) & 0x1f;
+        switch (mask)
+        {
+            case 0x8008:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"LD r{d}, Y",
+                    Verb = "LD",
+                    WestedCycle = 1,
+                    Executable = () =>
+                    {
+                        r[d] = _dataBus.Ram.Read(Y);
+                        PC++;
+                    }
+                };
+            case 0x9009:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"LD r{d}, Y+",
+                    Verb = "LD",
+                    WestedCycle = 1,
+                    Executable = () =>
+                    {
+                        if (d == 28 || d == 29)
+                            throw new UndifiendBehaviorException(opcode);
+                        r[d] = _dataBus.Ram.Read(Y++);
+                        PC++;
+                    }
+                };
+            case 0x900A:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"LD r{d}, -Y",
+                    Verb = "LD",
+                    WestedCycle = 1,
+                    Executable = () =>
+                    {
+                        if (d == 28 || d == 29)
+                            throw new UndifiendBehaviorException(opcode);
+                        r[d] = _dataBus.Ram.Read(--Y);
+                        PC++;
+                    }
+                };
+        }
+
+        throw new NotImplementedException();
+    }
+    /// <summary>
+    /// LD (LDD) – Load Indirect From Data Space to Register using Index Z
+    /// </summary>
+    /// <param name="opcode"></param>
+    /// <returns></returns>
+    /// <exception cref="WrongDecoderHandlerException"></exception>
+    /// <exception cref="UndifiendBehaviorException"></exception>
+    /// <exception cref="NotImplementedException"></exception>
+    private CPUInstruction LD_Z(UInt16 opcode)
+    {
+        //1000_000d_dddd_0000  LD rd, Z
+        //1001_000d_dddd_0001  LD rd, Z+
+        //1001_000d_dddd_0010  LD rd, -Z
+        //10q0_qq0d_dddd_0qqq  LDD rd, Z+q ; << not implemented now
+        var mask = opcode & 0xfe0f;
+        if (!(mask == 0x8000 ||
+             mask == 0x9001 ||
+             mask == 0x9002))
+        {
+            throw new WrongDecoderHandlerException();
+        }
+
+        var d = (opcode >> 4) & 0x1f;
+        switch (mask)
+        {
+            case 0x8000:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"LD r{d}, Z",
+                    Verb = "LD",
+                    WestedCycle = 1,
+                    Executable = () =>
+                    {
+                        r[d] = _dataBus.Ram.Read(Z);
+                        PC++;
+                    }
+                };
+            case 0x9001:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"LD r{d}, Z+",
+                    Verb = "LD",
+                    WestedCycle = 1,
+                    Executable = () =>
+                    {
+                        if (d == 30 || d == 31)
+                            throw new UndifiendBehaviorException(opcode);
+                        r[d] = _dataBus.Ram.Read(Z++);
+                        PC++;
+                    }
+                };
+            case 0x9002:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"LD r{d}, -Z",
+                    Verb = "LD",
+                    WestedCycle = 2,
+                    Executable = () =>
+                    {
+                        if (d == 30 || d == 31)
+                            throw new UndifiendBehaviorException(opcode);
+                        r[d] = _dataBus.Ram.Read(--Z);
+                        PC++;
+                    }
+                };
+        }
+
+        throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// LDS – Load Direct from Data Space
+    /// </summary>
+    private CPUInstruction LDS(UInt16 opcode)
+    {
+        // page 74 in manual
+        // 1001_000d_dddd_0000  <<< 2word 
+        // page 75
+        // 1001_0kkk_dddd_kkkk   << 1 word & 1 cycle not implemented yet
+        if ((opcode & 0xfe0f) != 0x9000)
+            throw new WrongDecoderHandlerException();
+
+        int d = (opcode >> 4) & 0x1f;
+        UInt16 k = _programBus.flashMemory.Read(PC+1);
+        return new CPUInstruction
+        {
+            Mnemonics = $"LDS r{d}, 0x{k:x4}",
+            Verb = "LDS",
+            WestedCycle = 2,
+            Executable = () =>
+            {
+                r[d] = _dataBus.Ram.Read(k);
+                PC += 2;
+            }
+        };
+    }
+
+    /// <summary>
+    /// LPM – Load Program Memory
+    /// </summary>
+    /// <param name="opcode"></param>
+    /// <returns></returns>
+    /// <exception cref="WrongDecoderHandlerException"></exception>
+    /// <exception cref="UndifiendBehaviorException"></exception>
+    /// <exception cref="UnRichabelLocationExaption"></exception>
+    private CPUInstruction LPM(UInt16 opcode)
+    {
+        // instruction set manual page 76
+        // 1001_0101_1100_1000   LPM ; R0 implied
+        // 1001_000d_dddd_0100   LPM rd, Z
+        // 1001_000d_dddd_0101   LPM rd, Z+
+        var mask = opcode & 0xfe0f;
+        if (!(opcode == 0x95C8 ||
+              mask == 0x9004 ||
+              mask == 0x9005))
+            throw new WrongDecoderHandlerException();
+
+        if (opcode == 0x95C8)
+            return new CPUInstruction
+            {
+                Mnemonics = "LPM",
+                Verb = "LPM",
+                WestedCycle = 3,
+                Executable = () =>
+                {
+                    var val = _programBus.flashMemory.Read(Z >> 1);
+                    r0 = Z.GetBit(0) ? (byte)(val >> 8):(byte)val;
+                    PC++;
+                }
+            };
+        
+        var d = (opcode >> 4) & 0x1f;
+        switch (mask)
+        {
+            case 0x9004:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"LPM r{d}, Z",
+                    Verb = "LPM",
+                    WestedCycle = 3,
+                    Executable = () =>
+                    {
+                        var val = _programBus.flashMemory.Read(Z >> 1);
+                        r[d] = Z.GetBit(0) ? (byte)(val >> 8) : (byte)val;
+                        PC++;
+                    }
+
+                };
+            case 0x9005:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"LPM r{d}, Z+",
+                    Verb = "LPM",
+                    WestedCycle = 3,
+                    Executable = () =>
+                    {
+                        if (d == 30 || d == 31)
+                            throw new UndifiendBehaviorException(opcode);
+
+                        var val = _programBus.flashMemory.Read(Z >> 1);
+                        r[d] = Z.GetBit(0) ? (byte)(val >> 8) : (byte)val;
+                        Z++;
+                        PC++;
+                    }
+
+                };
+
+        }
+        throw new UnRichabelLocationExaption();
+    }
+
+    private CPUInstruction ELPM(UInt16 opcode)
+    {
+        throw new NotImplementedException();
+    }
+
+    private CPUInstruction POP(UInt16 opcode)
+    {
+        //1001_000d_dddd_1111
+        if ((opcode & 0x900f) != 0x900f)
+            throw new WrongDecoderHandlerException();
+        int d = (opcode >> 4) & 0x1f;
+        return new CPUInstruction
+        {
+            Mnemonics = $"POP r{d}",
+            Verb = "POP",
+            WestedCycle = 2,
+            Executable = () =>
+            {
+                r[d] = _dataBus.Ram.Read(++SP);
+                PC++;
+            }
+        };
+    }
     private CPUInstruction LDi(UInt16 opcode)
     {
         // ldi Rd,k
         // 1110 kkkk dddd kkkk
         // opcode should be cxxx
         if ((opcode & 0xF000) != 0xE000)
-            throw new ArgumentException("wrong opcode handler!", nameof(opcode));
+            throw new WrongDecoderHandlerException();
 
         var d = opcode.GetNipple(1) | 0x10;
         if (!(16 <= d & d <= 31))
@@ -469,7 +848,7 @@ public class CPU
     {
         // opcode should be cxxx
         if ((opcode & 0xf000) != 0xc000)
-            throw new ArgumentException("wrong opcode handler!",nameof(opcode));
+            throw new WrongDecoderHandlerException();
 
         int k = opcode & 0x0fff;
         // check if it negative value
@@ -493,7 +872,7 @@ public class CPU
     private CPUInstruction RCALL(UInt16 ocode)
     {
         throw new NotImplementedException();
-    }
+    }    
     #endregion
 
     #region status Register helper
