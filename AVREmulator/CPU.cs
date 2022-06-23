@@ -167,9 +167,7 @@ public class CPU
                 throw new Exception("something went wrong,should not reach that line ever");
         }
     }
-
-    
-
+        
     /// <summary>
     /// execute an cpu executable Instruction
     /// </summary>
@@ -494,7 +492,7 @@ public class CPU
                     WestedCycle = 1,
                     Executable = () =>
                     {
-                        r[d] = _dataBus.Ram.Read(X);
+                        r[d] = _dataBus.Read(X);
                         PC++;
                     }
                 };
@@ -508,7 +506,7 @@ public class CPU
                     {
                         if (d == 26 || d == 27)
                             throw new UndifiendBehaviorException(opcode, $"LD r{d}, X+");
-                        r[d] = _dataBus.Ram.Read(X++);
+                        r[d] = _dataBus.Read(X++);
                         PC++;
                     }
                 };
@@ -522,7 +520,7 @@ public class CPU
                     {
                         if (d == 26 || d == 27)
                             throw new UndifiendBehaviorException(opcode, $"LD r{d}, -X");
-                        r[d] = _dataBus.Ram.Read(--X);
+                        r[d] = _dataBus.Read(--X);
                         PC++;
                     }
                 };
@@ -562,7 +560,7 @@ public class CPU
                     WestedCycle = 1,
                     Executable = () =>
                     {
-                        r[d] = _dataBus.Ram.Read(Y);
+                        r[d] = _dataBus.Read(Y);
                         PC++;
                     }
                 };
@@ -576,7 +574,7 @@ public class CPU
                     {
                         if (d == 28 || d == 29)
                             throw new UndifiendBehaviorException(opcode);
-                        r[d] = _dataBus.Ram.Read(Y++);
+                        r[d] = _dataBus.Read(Y++);
                         PC++;
                     }
                 };
@@ -590,7 +588,7 @@ public class CPU
                     {
                         if (d == 28 || d == 29)
                             throw new UndifiendBehaviorException(opcode);
-                        r[d] = _dataBus.Ram.Read(--Y);
+                        r[d] = _dataBus.Read(--Y);
                         PC++;
                     }
                 };
@@ -620,7 +618,7 @@ public class CPU
             WestedCycle = 2,
             Executable = () =>
             {
-                r[d] = _dataBus.Ram.Read(Y + q);
+                r[d] = _dataBus.Read(Y + q);
                 PC++;
             }
         };
@@ -657,7 +655,7 @@ public class CPU
                     WestedCycle = 1,
                     Executable = () =>
                     {
-                        r[d] = _dataBus.Ram.Read(Z);
+                        r[d] = _dataBus.Read(Z);
                         PC++;
                     }
                 };
@@ -671,7 +669,7 @@ public class CPU
                     {
                         if (d == 30 || d == 31)
                             throw new UndifiendBehaviorException(opcode);
-                        r[d] = _dataBus.Ram.Read(Z++);
+                        r[d] = _dataBus.Read(Z++);
                         PC++;
                     }
                 };
@@ -685,7 +683,7 @@ public class CPU
                     {
                         if (d == 30 || d == 31)
                             throw new UndifiendBehaviorException(opcode);
-                        r[d] = _dataBus.Ram.Read(--Z);
+                        r[d] = _dataBus.Read(--Z);
                         PC++;
                     }
                 };
@@ -715,7 +713,7 @@ public class CPU
             WestedCycle = 2,
             Executable = () =>
             {
-                r[d] = _dataBus.Ram.Read(Z + q);
+                r[d] = _dataBus.Read(Z + q);
                 PC++;
             }
         };
@@ -741,7 +739,7 @@ public class CPU
             WestedCycle = 2,
             Executable = () =>
             {
-                r[d] = _dataBus.Ram.Read(k);
+                r[d] = _dataBus.Read(k);
                 PC += 2;
             }
         };
@@ -839,7 +837,7 @@ public class CPU
             WestedCycle = 2,
             Executable = () =>
             {
-                r[d] = _dataBus.Ram.Read(++SP);
+                r[d] = _dataBus.Read(++SP);
                 PC++;
             }
         };

@@ -5,20 +5,34 @@ namespace AVREmulatorTests;
 
 public class CPUTests
 {
+    private readonly CPU _cpu;
+    private readonly DataBus _dataBus;
+    private readonly ProgramBus _programBus;
+    private readonly Ram _ram;
+    private readonly FlashMemory _flashMemory;
+    public CPUTests()
+    {
+        _dataBus = new();
+        _programBus = new();
+        _ram = new();
+        _ram.ConnectTO(_dataBus);
+        _cpu = new(_dataBus, _programBus);
+        _flashMemory = new(_programBus);
+    }
+
     [Fact]
     public void CPURegisters_Hardware_Maped_Correctly()
     {
-        CPU cpu = new CPU(new(), new());
         for (int i = 0; i < 32; i++)
         {
-            Assert.Equal(byte.MinValue, cpu.r[i]);
+            Assert.Equal(byte.MinValue, _cpu.r[i]);
 
-            var register = cpu.GetType().GetProperty($"r{i}");
-            Assert.Equal(byte.MinValue, register?.GetValue(cpu));
+            var register = _cpu.GetType().GetProperty($"r{i}");
+            Assert.Equal(byte.MinValue, register?.GetValue(_cpu));
 
-            register?.SetValue(cpu, (byte)0x62);
-            Assert.Equal((byte)0x62, cpu.r[i]);
-            Assert.Equal((byte)0x62, register?.GetValue(cpu));
+            register?.SetValue(_cpu, (byte)0x62);
+            Assert.Equal((byte)0x62, _cpu.r[i]);
+            Assert.Equal((byte)0x62, register?.GetValue(_cpu));
 
         }
     }
@@ -28,17 +42,17 @@ public class CPUTests
     {
         ushort opcode = 0;
         var pc = 52;
-        CPU cpu = new CPU(new(), new());
-        cpu.PC = pc;
+       
+        _cpu.PC = pc;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal("NOP", instruction.Verb);
         Assert.Equal("NOP", instruction.Mnemonics);
         Assert.Equal(1, instruction.WestedCycle);
 
         instruction.Executable.Invoke();
-        Assert.Equal(pc + 1, cpu.PC);
+        Assert.Equal(pc + 1, _cpu.PC);
     }
 
     [Theory]
@@ -62,19 +76,18 @@ public class CPUTests
     public void DecodeInstruction_MOv_test(ushort opcode, int dest, int source)
     {
         string mnemonics = $"MOV r{dest}, r{source}";
-        CPU cpu = new CPU(new(), new());
-        cpu.r[dest] = 0xca;
-        cpu.r[source] = 0xfb;
+        _cpu.r[dest] = 0xca;
+        _cpu.r[source] = 0xfb;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(mnemonics, instruction.Mnemonics);
         Assert.Equal("MOV", instruction.Verb);
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(0xfb, cpu.r[dest]);
-        Assert.Equal(0xfb, cpu.r[source]);
+        Assert.Equal(0xfb, _cpu.r[dest]);
+        Assert.Equal(0xfb, _cpu.r[source]);
 
     }
 
@@ -86,10 +99,8 @@ public class CPUTests
     [InlineData(0xe0d8, 29, 0x08)] // ldi	r29, 0x08
     #endregion
     public void DecodeInstruction_ldi_test(ushort opcode, int d, byte k)
-    {
-        CPU cpu = new CPU(new(), new());
-
-        var instruction = cpu.DecodeInstruction(opcode);
+    {        
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal($"LDI r{d}, 0x{k:x2}", instruction.Mnemonics, ignoreCase: true);
         Assert.Equal("LDI", instruction.Verb);
@@ -98,7 +109,7 @@ public class CPUTests
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(k, cpu.r[d]); // << most important
+        Assert.Equal(k, _cpu.r[d]); // << most important
     }
 
     [Theory]
@@ -109,10 +120,9 @@ public class CPUTests
     #endregion
     public void DecodeInstruction_RJMP_test(ushort opcode, int pc, int k, int ExpectedPC)
     {
-        CPU cpu = new CPU(new(), new());
-        cpu.PC = pc;
+        _cpu.PC = pc;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal("RJMP", instruction.Verb);
         Assert.Equal(2, instruction.WestedCycle);
@@ -120,27 +130,26 @@ public class CPUTests
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(ExpectedPC, cpu.PC);
+        Assert.Equal(ExpectedPC, _cpu.PC);
     }
 
     [Fact]
     public void DecodeInstruction_MOVW_test()
     {
         ushort opcode = 0x016E; // movw r12, r28
-        CPU cpu = new CPU(new(), new());
-        cpu.r28 = 0xf5;
-        cpu.r29 = 0x68;
-        cpu.PC = 100;
+        _cpu.r28 = 0xf5;
+        _cpu.r29 = 0x68;
+        _cpu.PC = 100;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
         instruction.Executable.Invoke();
 
-        Assert.Equal(cpu.r28, cpu.r12);
-        Assert.Equal(cpu.r29, cpu.r13);
+        Assert.Equal(_cpu.r28, _cpu.r12);
+        Assert.Equal(_cpu.r29, _cpu.r13);
         Assert.Equal("MOVW", instruction.Verb);
         Assert.Equal(1, instruction.WestedCycle);
         Assert.Equal("MOVW r12, r28", instruction.Mnemonics, ignoreCase: true);
-        Assert.Equal(101, cpu.PC);
+        Assert.Equal(101, _cpu.PC);
     }
 
     [Theory]
@@ -159,22 +168,19 @@ public class CPUTests
         string Mnemonics = $"LD r{d}, X";
         ushort address = 0xff;
         byte val = 0xcc;
+                
+        _ram.RAM[address] = val;
+        _cpu.X = address;
+        _cpu.PC = 100;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.X = address;
-        cpu.PC = 100;
-
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, cpu.r[d]);
-        Assert.Equal(101, cpu.PC);
+        Assert.Equal(val, _cpu.r[d]);
+        Assert.Equal(101, _cpu.PC);
     }
 
     [Theory]
@@ -194,20 +200,17 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.X = address;
+        _ram.RAM[address] = val;
+        _cpu.X = address;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, cpu.r[d]);
-        Assert.Equal(address + 1, cpu.X);
+        Assert.Equal(val, _cpu.r[d]);
+        Assert.Equal(address + 1, _cpu.X);
 
     }
 
@@ -228,23 +231,20 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.X = address;
-        cpu.X++; // should be decrement to address afterr execution
-        cpu.PC = 100;
+        _ram.RAM[address] = val;
+        _cpu.X = address;
+        _cpu.X++; // should be decrement to address afterr execution
+        _cpu.PC = 100;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, cpu.r[d]);
-        Assert.Equal(address, cpu.X);
-        Assert.Equal(101, cpu.PC);
+        Assert.Equal(val, _cpu.r[d]);
+        Assert.Equal(address, _cpu.X);
+        Assert.Equal(101, _cpu.PC);
 
     }
 
@@ -257,13 +257,10 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.X = address;
+        _ram.RAM[address] = val;
+        _cpu.X = address;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
@@ -279,13 +276,10 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.X = address;
+        _ram.RAM[address] = val;
+        _cpu.X = address;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
@@ -314,21 +308,18 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.Y = address;
-        cpu.PC = 100;
+        _ram.RAM[address] = val;
+        _cpu.Y = address;
+        _cpu.PC = 100;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, cpu.r[d]);
-        Assert.Equal(101, cpu.PC);
+        Assert.Equal(val, _cpu.r[d]);
+        Assert.Equal(101, _cpu.PC);
     }
 
     [Theory]
@@ -479,21 +470,18 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address +q] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.Y = address;
-        cpu.PC = 100;
+        _ram.RAM[address +q] = val;
+        _cpu.Y = address;
+        _cpu.PC = 100;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, cpu.r[d]);
-        Assert.Equal(101, cpu.PC);
+        Assert.Equal(val, _cpu.r[d]);
+        Assert.Equal(101, _cpu.PC);
     }
 
     [Theory]
@@ -513,22 +501,19 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.Y = address;
-        cpu.PC = 120;
+        _ram.RAM[address] = val;
+        _cpu.Y = address;
+        _cpu.PC = 120;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, cpu.r[d]);
-        Assert.Equal(address + 1, cpu.Y);
-        Assert.Equal(121, cpu.PC);
+        Assert.Equal(val, _cpu.r[d]);
+        Assert.Equal(address + 1, _cpu.Y);
+        Assert.Equal(121, _cpu.PC);
 
     }
 
@@ -549,22 +534,19 @@ public class CPUTests
         int address = 0xff;
         byte val = 0xcc;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.Y = (ushort)(address +1);
-        cpu.PC = 100;
+        _ram.RAM[address] = val;
+        _cpu.Y = (ushort)(address +1);
+        _cpu.PC = 100;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, cpu.r[d]);
-        Assert.Equal(address, cpu.Y);
-        Assert.Equal(101, cpu.PC);
+        Assert.Equal(val, _cpu.r[d]);
+        Assert.Equal(address, _cpu.Y);
+        Assert.Equal(101, _cpu.PC);
 
     }
 
@@ -577,13 +559,10 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.Y = address;
+        _ram.RAM[address] = val;
+        _cpu.Y = address;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
@@ -599,13 +578,10 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.Y = address;
+        _ram.RAM[address] = val;
+        _cpu.Y = address;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
@@ -634,22 +610,19 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.Z = address;
-        cpu.PC = 100;
+        _ram.RAM[address] = val;
+        _cpu.Z = address;
+        _cpu.PC = 100;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
         Assert.Equal(1, instruction.WestedCycle);
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, cpu.r[d]);
-        Assert.Equal(101, cpu.PC);
+        Assert.Equal(val, _cpu.r[d]);
+        Assert.Equal(101, _cpu.PC);
     }
 
     [Theory]
@@ -800,22 +773,20 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address + q] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.Z = address;
-        cpu.PC = 100;
+        _ram.RAM[address + q] = val;
+        _cpu.Z = address;
+        _cpu.PC = 100;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, cpu.r[d]);
-        Assert.Equal(101, cpu.PC);
+        Assert.Equal(val, _cpu.r[d]);
+        Assert.Equal(101, _cpu.PC);
     }
+   
     [Theory]
     #region test data
     [InlineData(0x91d1, 29)]
@@ -833,23 +804,20 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.Z = address;
-        cpu.PC = 120;
+        _ram.RAM[address] = val;
+        _cpu.Z = address;
+        _cpu.PC = 120;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
         Assert.Equal(1, instruction.WestedCycle);
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, cpu.r[d]);
-        Assert.Equal(address + 1, cpu.Z);
-        Assert.Equal(121, cpu.PC);
+        Assert.Equal(val, _cpu.r[d]);
+        Assert.Equal(address + 1, _cpu.Z);
+        Assert.Equal(121, _cpu.PC);
 
     }
 
@@ -870,23 +838,20 @@ public class CPUTests
         int address = 0xff;
         byte val = 0xcc;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.Z = (ushort)(address + 1);
-        cpu.PC = 100;
+        _ram.RAM[address] = val;
+        _cpu.Z = (ushort)(address + 1);
+        _cpu.PC = 100;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
         Assert.Equal(2, instruction.WestedCycle);
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, cpu.r[d]);
-        Assert.Equal(address, cpu.Z);
-        Assert.Equal(101, cpu.PC);
+        Assert.Equal(val, _cpu.r[d]);
+        Assert.Equal(address, _cpu.Z);
+        Assert.Equal(101, _cpu.PC);
 
     }
 
@@ -899,13 +864,10 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.Z = address;
+        _ram.RAM[address] = val;
+        _cpu.Z = address;
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
@@ -919,18 +881,13 @@ public class CPUTests
     {
         string Mnemonics = $"LD r{d}, -Z";
         ushort address = 0xff;
-        byte val = 0xcc;
+        byte val = 0xcc;        
+        _ram.RAM[address] = val;
+        _cpu.Z = address;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.Z = address;
-
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
-
         Assert.Throws<UndifiendBehaviorException>(instruction.Executable);
     }
 
@@ -942,26 +899,23 @@ public class CPUTests
         int address = 100;
         ushort val = 0xefcd;
 
-        ProgramBus programBus = new();
-        FlashMemory flashMemory = new(programBus);
-        flashMemory.Write(address, val);
-        CPU cpu = new(new(), programBus);
-        cpu.Z = (ushort)(address << 1);
-        cpu.r0 = 0;
+        _flashMemory.Write(address, val);
+        _cpu.Z = (ushort)(address << 1);
+        _cpu.r0 = 0;
 
 
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
         instruction.Executable.Invoke();
 
-        Assert.Equal(0xcd, cpu.r0);
+        Assert.Equal(0xcd, _cpu.r0);
 
-        cpu.Z |=1 ;
-        cpu.r0 = 0;
-        instruction = cpu.DecodeInstruction(opcode);
+        _cpu.Z |=1 ;
+        _cpu.r0 = 0;
+        instruction = _cpu.DecodeInstruction(opcode);
         instruction.Executable.Invoke();
-        Assert.Equal(0xef, cpu.r0);
+        Assert.Equal(0xef, _cpu.r0);
 
     }
 
@@ -988,26 +942,20 @@ public class CPUTests
         string Mnemonics = $"LPM r{d}, Z";
         int address = 100;
         ushort val = 0xefcd;
-
-        ProgramBus programBus = new();
-        FlashMemory flashMemory = new(programBus);
-        flashMemory.Write(address, val);
-        CPU cpu = new(new(), programBus);
-        cpu.Z = (ushort)(address << 1);
+        _flashMemory.Write(address, val);
+        _cpu.Z = (ushort)(address << 1);
         
-
-
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
         instruction.Executable.Invoke();
 
-        Assert.Equal(0xcd, cpu.r[d]);
+        Assert.Equal(0xcd, _cpu.r[d]);
         // try to fetch high byte
-        cpu.Z = (ushort)((address<<1)|1);
-        instruction = cpu.DecodeInstruction(opcode);
+        _cpu.Z = (ushort)((address<<1)|1);
+        instruction = _cpu.DecodeInstruction(opcode);
         instruction.Executable.Invoke();
-        Assert.Equal(0xef, cpu.r[d]);
+        Assert.Equal(0xef, _cpu.r[d]);
     }
 
     [Theory]
@@ -1034,31 +982,25 @@ public class CPUTests
         int flashAddress = 100;
         int zPointer = 100 << 1;
         ushort val = 0xefcd;
+        _flashMemory.Write(flashAddress, val);
+        _cpu.Z = (ushort)zPointer;
+        _cpu.PC = 400;
 
-        ProgramBus programBus = new();
-        FlashMemory flashMemory = new(programBus);
-        flashMemory.Write(flashAddress, val);
-        CPU cpu = new(new(), programBus);
-        cpu.Z = (ushort)zPointer;
-        cpu.PC = 400;
-
-
-
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
         Assert.Equal(3,instruction.WestedCycle);
         instruction.Executable.Invoke();
 
-        Assert.Equal(0xcd, cpu.r[d]);
-        Assert.Equal(zPointer + 1, cpu.Z); // check if Z incremented corectlly
-        Assert.Equal(401, cpu.PC);
+        Assert.Equal(0xcd, _cpu.r[d]);
+        Assert.Equal(zPointer + 1, _cpu.Z); // check if Z incremented corectlly
+        Assert.Equal(401, _cpu.PC);
 
         // try to fetch high byte
         // z alredy incremented
-        instruction = cpu.DecodeInstruction(opcode);
+        instruction = _cpu.DecodeInstruction(opcode);
         instruction.Executable.Invoke();
-        Assert.Equal(0xef, cpu.r[d]);
+        Assert.Equal(0xef, _cpu.r[d]);
     }
 
     [Theory]
@@ -1070,17 +1012,12 @@ public class CPUTests
         int flashAddress = 100;
         int zPointer = 100 << 1;
         ushort val = 0xefcd;
+                
+        _flashMemory.Write(flashAddress, val);
+        _cpu.Z = (ushort)zPointer;
+        _cpu.PC = 400;
 
-        ProgramBus programBus = new();
-        FlashMemory flashMemory = new(programBus);
-        flashMemory.Write(flashAddress, val);
-        CPU cpu = new(new(), programBus);
-        cpu.Z = (ushort)zPointer;
-        cpu.PC = 400;
-
-
-
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
         
@@ -1110,24 +1047,19 @@ public class CPUTests
         string Mnemonics = $"POP r{d}";
         int address = 100;
         byte val = 0xcc;
+                
+        _ram.RAM[address] = val;
+        _cpu.SP = (ushort)(address-1);
+        _cpu.PC = 102;
+        _cpu.r[d] = 0;
 
-        DataBus dataBus = new();
-        var ram = new Ram(dataBus);
-        ram.RAM[address] = val;
-        var cpu = new CPU(dataBus, new());
-        cpu.SP = (ushort)(address-1);
-        cpu.PC = 102;
-        cpu.r[d] = 0;
-
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
         instruction.Executable.Invoke();
-        Assert.Equal(val, cpu.r[d]);
-        Assert.Equal(address, cpu.SP);
-        Assert.Equal(103, cpu.PC);
-
-
+        Assert.Equal(val, _cpu.r[d]);
+        Assert.Equal(address, _cpu.SP);
+        Assert.Equal(103, _cpu.PC);
     }
 
     [Theory]
@@ -1150,31 +1082,24 @@ public class CPUTests
     #endregion
     public void DecodeInstruction_LDS_Test(ushort opcode, int d)
     {
-
         ushort k = 0x052d;
         string Mnemonics = $"LDS r{d}, 0x{k:x4}";
         byte val = 0xce;
-        int flashAddress = 100;
+        int flashAddress = 100;      
+        _flashMemory.Write(flashAddress, opcode);
+        _flashMemory.Write(flashAddress +1, k);
+        _ram.Write(k, val);
+        _cpu.PC = flashAddress;
 
-        ProgramBus programBus = new();
-        FlashMemory flashMemory = new(programBus);
-        flashMemory.Write(flashAddress, opcode);
-        flashMemory.Write(flashAddress +1, k);
-        DataBus dataBus = new();
-        Ram ram = new(dataBus);
-        ram.Write(k, val);
-        CPU cpu = new(dataBus, programBus);
-        cpu.PC = flashAddress;
-
-        var instruction = cpu.DecodeInstruction(opcode);
+        var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics,instruction.Mnemonics);
         Assert.Equal(2,instruction.WestedCycle);
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, cpu.r[d]);
-        Assert.Equal(flashAddress + 2, cpu.PC);
+        Assert.Equal(val, _cpu.r[d]);
+        Assert.Equal(flashAddress + 2, _cpu.PC);
     }
     //[Theory]
     //[InlineData(0xfb,10, 0xce, 0xff)] // -5 * 10 = 0xffce
