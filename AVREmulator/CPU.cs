@@ -249,15 +249,32 @@ public class CPU
     {
         if (opcode.GetNipple(3) != 8)
             throw new WrongDecoderHandlerException();
+        int lowNipple = opcode.GetNipple(0);
         switch (opcode.GetNipple(2))
         {
             case 0:
             case 1:
-                if (opcode.GetNipple(0) <= 7)
-                    return LD_Z(opcode);
-                else
-                    return LD_Y(opcode);
-                
+                switch (lowNipple)
+                {
+                    case 0: return LD_Z(opcode);
+                    case int n when (n <= 7):return LDD_Z(opcode);
+                    case 8: return LD_Y(opcode);
+                    case int n when (n <= 0xf):return LDD_Y(opcode);
+                    default: throw new UnRichabelLocationExaption();
+                }
+            case 0X4:
+            case 0X5:
+            case 0X8:
+            case 0X9:
+            case 0XC:
+            case 0XD:
+                switch (lowNipple)
+                {
+                    case int n when (n <= 7): return LDD_Z(opcode);
+                    case int n when (n <= 0xf): return LDD_Y(opcode);
+                    default: throw new UnRichabelLocationExaption();
+                }            
+
         }
         throw new NotImplementedException();
     }
@@ -310,6 +327,27 @@ public class CPU
     /// <exception cref="ArgumentException">if the opcode desnote start with A</exception>
     private CPUInstruction GroupA(ushort opcode)
     {
+        if (opcode.GetNipple(3) != 0XA)
+            throw new WrongDecoderHandlerException();
+        int lowNipple = opcode.GetNipple(0);
+        switch (opcode.GetNipple(2))
+        {
+            case 0X0:
+            case 0X1:
+            case 0X4:
+            case 0X5:
+            case 0X8:
+            case 0X9:
+            case 0XC:
+            case 0XD:
+                switch (lowNipple)
+                {
+                    case int n when (n <= 7): return LDD_Z(opcode);
+                    case int n when (n <= 0xf): return LDD_Y(opcode);
+                    default: throw new UnRichabelLocationExaption();
+                }
+
+        }
         throw new NotImplementedException();
     }
     /// <summary>
@@ -431,7 +469,7 @@ public class CPU
     }
 
     /// <summary>
-    /// LD (LDD) – Load Indirect From Data Space to Register using Index X
+    /// LD – Load Indirect From Data Space to Register using Index X
     /// </summary>
     /// <param name="opcode"></param>
     /// <returns></returns>
@@ -492,7 +530,7 @@ public class CPU
         throw new Exception("unknown error code should not rich this point");
     }
     /// <summary>
-    /// LD (LDD) – Load Indirect From Data Space to Register using Index Y
+    /// LD – Load Indirect From Data Space to Register using Index Y
     /// </summary>
     /// <param name="opcode"></param>
     /// <returns></returns>
@@ -501,10 +539,10 @@ public class CPU
     /// <exception cref="NotImplementedException"></exception>
     private CPUInstruction LD_Y(UInt16 opcode)
     {
+        // page 71 in manuale
         //1000_000d_dddd_1000  LD rd, Y
         //1001_000d_dddd_1001  LD rd, Y+
         //1001_000d_dddd_1010  LD rd, -Y
-        //10q0_qq0d_dddd_1qqq  LDD rd, Y+q ; << not implemented now
         var mask = opcode & 0xfe0f;
         if (! ( mask == 0x8008 ||
              mask == 0x9009 ||
@@ -558,7 +596,34 @@ public class CPU
                 };
         }
 
-        throw new NotImplementedException();
+        throw new UnRichabelLocationExaption();
+    }
+
+    /// <summary>
+    /// LDD – Load Indirect with displasment From Data Space to Register using Index Y
+    /// </summary>
+    /// <param name="opcode"></param>
+    /// <returns></returns>
+    private CPUInstruction LDD_Y(UInt16 opcode)
+    {
+        // page 71
+        //10q0_qq0d_dddd_1qqq  LDD rd, Y+q ;
+        if ((opcode & 0b1101_0010_0000_1000) != 0x8008)
+            throw new WrongDecoderHandlerException();
+
+        int d = (opcode >> 4) & 0x1f;
+        int q = ( (opcode & 0b0000_0111) | ((opcode >> 7) & 0b0001_1000) | ((opcode >> 8) & 0b0010_0000) ) & 0b0011_1111;
+        return new CPUInstruction
+        {
+            Mnemonics = $"LDD r{d}, Y+{q}",
+            Verb = "LDD",
+            WestedCycle = 2,
+            Executable = () =>
+            {
+                r[d] = _dataBus.Ram.Read(Y + q);
+                PC++;
+            }
+        };
     }
     /// <summary>
     /// LD (LDD) – Load Indirect From Data Space to Register using Index Z
@@ -572,8 +637,7 @@ public class CPU
     {
         //1000_000d_dddd_0000  LD rd, Z
         //1001_000d_dddd_0001  LD rd, Z+
-        //1001_000d_dddd_0010  LD rd, -Z
-        //10q0_qq0d_dddd_0qqq  LDD rd, Z+q ; << not implemented now
+        //1001_000d_dddd_0010  LD rd, -Z        
         var mask = opcode & 0xfe0f;
         if (!(mask == 0x8000 ||
              mask == 0x9001 ||
@@ -627,9 +691,35 @@ public class CPU
                 };
         }
 
-        throw new NotImplementedException();
+        throw new UnRichabelLocationExaption();
     }
 
+    /// <summary>
+    /// LDD – Load Indirect with displasment From Data Space to Register using Index Z
+    /// </summary>
+    /// <param name="opcode"></param>
+    /// <returns></returns>
+    /// <exception cref="WrongDecoderHandlerException"></exception>
+    private CPUInstruction LDD_Z(UInt16 opcode)
+    {
+        //10q0_qq0d_dddd_0qqq  LDD rd, Z+q ;
+        if ((opcode & 0b1101_0010_0000_1000) != 0x8000)
+            throw new WrongDecoderHandlerException();
+
+        int d = (opcode >> 4) & 0x1f;
+        int q = ((opcode & 0x7) | ((opcode >> 7) & 0x18) | ((opcode >> 8) & 0x20)) & 0x3f;
+        return new CPUInstruction
+        {
+            Mnemonics = $"LDD r{d}, Z+{q}",
+            Verb = "LDD",
+            WestedCycle = 2,
+            Executable = () =>
+            {
+                r[d] = _dataBus.Ram.Read(Z + q);
+                PC++;
+            }
+        };
+    }
     /// <summary>
     /// LDS – Load Direct from Data Space
     /// </summary>

@@ -5,7 +5,6 @@ namespace AVREmulatorTests;
 
 public class CPUTests
 {
-
     [Fact]
     public void CPURegisters_Hardware_Maped_Correctly()
     {
@@ -43,6 +42,7 @@ public class CPUTests
     }
 
     [Theory]
+    #region test data
     [InlineData(0x2C01, 0, 1)]
     [InlineData(0x2c60, 6, 0)]
     [InlineData(0x2Ce5, 14, 5)]
@@ -58,6 +58,7 @@ public class CPUTests
     [InlineData(0x2fed, 30, 29)]
     [InlineData(0x2fc0, 28, 16)]
     [InlineData(0x2fff, 31, 31)]
+    #endregion
     public void DecodeInstruction_MOv_test(ushort opcode, int dest, int source)
     {
         string mnemonics = $"MOV r{dest}, r{source}";
@@ -78,10 +79,12 @@ public class CPUTests
     }
 
     [Theory]
+    #region test data
     [InlineData(0xef0f, 16, 0xff)] // ldi r16,0xff
     [InlineData(0xefff, 31, 0xff)] // ldi r31,0xff
     [InlineData(0xe512, 17, 0x52)] // ldi r17,0x52
     [InlineData(0xe0d8, 29, 0x08)] // ldi	r29, 0x08
+    #endregion
     public void DecodeInstruction_ldi_test(ushort opcode, int d, byte k)
     {
         CPU cpu = new CPU(new(), new());
@@ -99,9 +102,11 @@ public class CPUTests
     }
 
     [Theory]
+    #region test data
     [InlineData(0xcfff, 0x12, -01, 0x12)]
     [InlineData(0xcffE, 0x12, -02, 0x11)]
     [InlineData(0xc002, 0x12, 02, 0x15)]
+    #endregion
     public void DecodeInstruction_RJMP_test(ushort opcode, int pc, int k, int ExpectedPC)
     {
         CPU cpu = new CPU(new(), new());
@@ -138,8 +143,8 @@ public class CPUTests
         Assert.Equal(101, cpu.PC);
     }
 
-
     [Theory]
+    #region test data
     [InlineData(0x91Fc, 31)]
     [InlineData(0x91ec, 30)]
     [InlineData(0x911c, 17)]
@@ -148,6 +153,7 @@ public class CPUTests
     [InlineData(0x90ec, 14)]
     [InlineData(0x901c, 1)]
     [InlineData(0x900c, 0)]
+    #endregion
     public void DecodeInstruction_LD_X_test(ushort opcode, ushort d)
     {
         string Mnemonics = $"LD r{d}, X";
@@ -172,6 +178,7 @@ public class CPUTests
     }
 
     [Theory]
+    #region test data
     [InlineData(0x91FD, 31)]
     [InlineData(0x91eD, 30)]
     [InlineData(0x911D, 17)]
@@ -180,6 +187,7 @@ public class CPUTests
     [InlineData(0x90eD, 14)]
     [InlineData(0x901D, 1)]
     [InlineData(0x900D, 0)]
+    #endregion
     public void DecodeInstruction_LD_X_postincrement_test(ushort opcode, ushort d)
     {
         string Mnemonics = $"LD r{d}, X+";
@@ -204,6 +212,7 @@ public class CPUTests
     }
 
     [Theory]
+    #region test data
     [InlineData(0x91FE, 31)]
     [InlineData(0x91eE, 30)]
     [InlineData(0x911E, 17)]
@@ -212,6 +221,7 @@ public class CPUTests
     [InlineData(0x90eE, 14)]
     [InlineData(0x901E, 1)]
     [InlineData(0x900E, 0)]
+    #endregion
     public void DecodeInstruction_LD_X_preDecremant_test(ushort opcode, ushort d)
     {
         string Mnemonics = $"LD r{d}, -X";
@@ -283,6 +293,7 @@ public class CPUTests
     }
 
     [Theory]
+    #region test data
     [InlineData(0x8008,  0)]
     [InlineData(0x8018,  1)]
     [InlineData(0x8028,  2)]
@@ -296,6 +307,7 @@ public class CPUTests
     [InlineData(0x8118, 17)]
     [InlineData(0x81C8, 28)]
     [InlineData(0x81F8, 31)]
+    #endregion
     public void DecodeInstruction_LD_Y_test(ushort opcode, ushort d)
     {
         string Mnemonics = $"LD r{d}, Y";
@@ -320,6 +332,172 @@ public class CPUTests
     }
 
     [Theory]
+    #region test data
+    [InlineData(0x8009, 00, 1)]
+    [InlineData(0x8019, 01, 1)]
+    [InlineData(0x8029, 02, 1)]
+    [InlineData(0x8039, 03, 1)]
+    [InlineData(0x8049, 04, 1)]
+    [InlineData(0x8059, 05, 1)]
+    [InlineData(0x80D9, 13, 1)]
+    [InlineData(0x80E9, 14, 1)]
+    [InlineData(0x80F9, 15, 1)]
+    [InlineData(0x8109, 16, 1)]
+    [InlineData(0x8119, 17, 1)]
+    [InlineData(0x81C9, 28, 1)]
+    [InlineData(0x81F9, 31, 1)]
+
+    [InlineData(0x800B, 00, 3)]
+    [InlineData(0x801B, 01, 3)]
+    [InlineData(0x802B, 02, 3)]
+    [InlineData(0x803B, 03, 3)]
+    [InlineData(0x804B, 04, 3)]
+    [InlineData(0x805B, 05, 3)]
+    [InlineData(0x80DB, 13, 3)]
+    [InlineData(0x80EB, 14, 3)]
+    [InlineData(0x80FB, 15, 3)]
+    [InlineData(0x810B, 16, 3)]
+    [InlineData(0x811B, 17, 3)]
+    [InlineData(0x81CB, 28, 3)]
+    [InlineData(0x81FB, 31, 3)]
+
+    [InlineData(0x800F, 00, 7)]
+    [InlineData(0x801F, 01, 7)]
+    [InlineData(0x802F, 02, 7)]
+    [InlineData(0x803F, 03, 7)]
+    [InlineData(0x804F, 04, 7)]
+    [InlineData(0x805F, 05, 7)]
+    [InlineData(0x80DF, 13, 7)]
+    [InlineData(0x80EF, 14, 7)]
+    [InlineData(0x80FF, 15, 7)]
+    [InlineData(0x810F, 16, 7)]
+    [InlineData(0x811F, 17, 7)]
+    [InlineData(0x81CF, 28, 7)]
+    [InlineData(0x81FF, 31, 7)]
+
+    [InlineData(0x8408, 00, 8)]
+    [InlineData(0x8418, 01, 8)]
+    [InlineData(0x8428, 02, 8)]
+    [InlineData(0x8438, 03, 8)]
+    [InlineData(0x8448, 04, 8)]
+    [InlineData(0x8458, 05, 8)]
+    [InlineData(0x84D8, 13, 8)]
+    [InlineData(0x84E8, 14, 8)]
+    [InlineData(0x84F8, 15, 8)]
+    [InlineData(0x8508, 16, 8)]
+    [InlineData(0x8518, 17, 8)]
+    [InlineData(0x85C8, 28, 8)]
+    [InlineData(0x85F8, 31, 8)]
+
+    [InlineData(0x840C, 00, 12)]
+    [InlineData(0x841C, 01, 12)]
+    [InlineData(0x842C, 02, 12)]
+    [InlineData(0x843C, 03, 12)]
+    [InlineData(0x844C, 04, 12)]
+    [InlineData(0x845C, 05, 12)]
+    [InlineData(0x84DC, 13, 12)]
+    [InlineData(0x84EC, 14, 12)]
+    [InlineData(0x84FC, 15, 12)]
+    [InlineData(0x850C, 16, 12)]
+    [InlineData(0x851C, 17, 12)]
+    [InlineData(0x85CC, 28, 12)]
+    [InlineData(0x85FC, 31, 12)]
+
+    [InlineData(0x840F, 00, 15)]
+    [InlineData(0x841F, 01, 15)]
+    [InlineData(0x842F, 02, 15)]
+    [InlineData(0x843F, 03, 15)]
+    [InlineData(0x844F, 04, 15)]
+    [InlineData(0x845F, 05, 15)]
+    [InlineData(0x84DF, 13, 15)]
+    [InlineData(0x84EF, 14, 15)]
+    [InlineData(0x84FF, 15, 15)]
+    [InlineData(0x850F, 16, 15)]
+    [InlineData(0x851F, 17, 15)]
+    [InlineData(0x85CF, 28, 15)]
+    [InlineData(0x85FF, 31, 15)]
+
+    [InlineData(0x8C08, 00, 24)]
+    [InlineData(0x8C18, 01, 24)]
+    [InlineData(0x8C28, 02, 24)]
+    [InlineData(0x8C38, 03, 24)]
+    [InlineData(0x8C48, 04, 24)]
+    [InlineData(0x8C58, 05, 24)]
+    [InlineData(0x8CD8, 13, 24)]
+    [InlineData(0x8CE8, 14, 24)]
+    [InlineData(0x8CF8, 15, 24)]
+    [InlineData(0x8D08, 16, 24)]
+    [InlineData(0x8D18, 17, 24)]
+    [InlineData(0x8DC8, 28, 24)]
+    [InlineData(0x8DF8, 31, 24)]
+
+    [InlineData(0x8C0F, 00, 31)]
+    [InlineData(0x8C1F, 01, 31)]
+    [InlineData(0x8C2F, 02, 31)]
+    [InlineData(0x8C3F, 03, 31)]
+    [InlineData(0x8C4F, 04, 31)]
+    [InlineData(0x8C5F, 05, 31)]
+    [InlineData(0x8CDF, 13, 31)]
+    [InlineData(0x8CEF, 14, 31)]
+    [InlineData(0x8CFF, 15, 31)]
+    [InlineData(0x8D0F, 16, 31)]
+    [InlineData(0x8D1F, 17, 31)]
+    [InlineData(0x8DCF, 28, 31)]
+    [InlineData(0x8DFF, 31, 31)]
+
+    [InlineData(0xA009, 00, 33)]
+    [InlineData(0xA019, 01, 33)]
+    [InlineData(0xA029, 02, 33)]
+    [InlineData(0xA039, 03, 33)]
+    [InlineData(0xA049, 04, 33)]
+    [InlineData(0xA059, 05, 33)]
+    [InlineData(0xA0D9, 13, 33)]
+    [InlineData(0xA0E9, 14, 33)]
+    [InlineData(0xA0F9, 15, 33)]
+    [InlineData(0xA109, 16, 33)]
+    [InlineData(0xA119, 17, 33)]
+    [InlineData(0xA1C9, 28, 33)]
+    [InlineData(0xA1F9, 31, 33)]
+
+    [InlineData(0xAC0F, 00, 63)]
+    [InlineData(0xAC1F, 01, 63)]
+    [InlineData(0xAC2F, 02, 63)]
+    [InlineData(0xAC3F, 03, 63)]
+    [InlineData(0xAC4F, 04, 63)]
+    [InlineData(0xAC5F, 05, 63)]
+    [InlineData(0xACDF, 13, 63)]
+    [InlineData(0xACEF, 14, 63)]
+    [InlineData(0xACFF, 15, 63)]
+    [InlineData(0xAD0F, 16, 63)]
+    [InlineData(0xAD1F, 17, 63)]
+    [InlineData(0xADCF, 28, 63)]
+    [InlineData(0xADFF, 31, 63)]
+    #endregion
+    public void DecodeInstruction_LDD_Y_test(ushort opcode, int d,int q)
+    {
+        string Mnemonics = $"LDD r{d}, Y+{q}";
+        ushort address = 0xff;
+        byte val = 0xcc;
+
+        DataBus dataBus = new();
+        var ram = new Ram(dataBus);
+        ram.RAM[address +q] = val;
+        var cpu = new CPU(dataBus, new());
+        cpu.Y = address;
+        cpu.PC = 100;
+
+        var instruction = cpu.DecodeInstruction(opcode);
+
+        Assert.Equal(Mnemonics, instruction.Mnemonics);
+
+        instruction.Executable.Invoke();
+
+        Assert.Equal(val, cpu.r[d]);
+        Assert.Equal(101, cpu.PC);
+    }
+
+    [Theory]
+    #region test data
     [InlineData(0x91F9, 31)]
     [InlineData(0x91e9, 30)]
     [InlineData(0x9119, 17)]
@@ -328,6 +506,7 @@ public class CPUTests
     [InlineData(0x90e9, 14)]
     [InlineData(0x9019, 1)]
     [InlineData(0x9009, 0)]
+    #endregion
     public void DecodeInstruction_LD_Y_postincrement_test(ushort opcode, ushort d)
     {
         string Mnemonics = $"LD r{d}, Y+";
@@ -354,6 +533,7 @@ public class CPUTests
     }
 
     [Theory]
+    #region test data
     [InlineData(0x91FA, 31)]
     [InlineData(0x91eA, 30)]
     [InlineData(0x911A, 17)]
@@ -362,6 +542,7 @@ public class CPUTests
     [InlineData(0x90eA, 14)]
     [InlineData(0x901A, 1)]
     [InlineData(0x900A, 0)]
+    #endregion
     public void DecodeInstruction_LD_Y_preDecremant_test(ushort opcode, ushort d)
     {
         string Mnemonics = $"LD r{d}, -Y";
@@ -431,10 +612,8 @@ public class CPUTests
         Assert.Throws<UndifiendBehaviorException>(instruction.Executable);
     }
 
-    ///****************************************************
-
-
     [Theory]
+    #region test data
     [InlineData(0x8000, 0)]
     [InlineData(0x8010, 1)]
     [InlineData(0x8020, 2)]
@@ -448,6 +627,7 @@ public class CPUTests
     [InlineData(0x8110, 17)]
     [InlineData(0x81C0, 28)]
     [InlineData(0x81F0, 31)]
+    #endregion
     public void DecodeInstruction_LD_Z_test(ushort opcode, ushort d)
     {
         string Mnemonics = $"LD r{d}, Z";
@@ -473,6 +653,171 @@ public class CPUTests
     }
 
     [Theory]
+    #region test data
+    [InlineData(0x8001, 00, 1)]
+    [InlineData(0x8011, 01, 1)]
+    [InlineData(0x8021, 02, 1)]
+    [InlineData(0x8031, 03, 1)]
+    [InlineData(0x8041, 04, 1)]
+    [InlineData(0x8051, 05, 1)]
+    [InlineData(0x80D1, 13, 1)]
+    [InlineData(0x80E1, 14, 1)]
+    [InlineData(0x80F1, 15, 1)]
+    [InlineData(0x8101, 16, 1)]
+    [InlineData(0x8111, 17, 1)]
+    [InlineData(0x81C1, 28, 1)]
+    [InlineData(0x81F1, 31, 1)]
+
+    [InlineData(0x8003, 00, 3)]
+    [InlineData(0x8013, 01, 3)]
+    [InlineData(0x8023, 02, 3)]
+    [InlineData(0x8033, 03, 3)]
+    [InlineData(0x8043, 04, 3)]
+    [InlineData(0x8053, 05, 3)]
+    [InlineData(0x80D3, 13, 3)]
+    [InlineData(0x80E3, 14, 3)]
+    [InlineData(0x80F3, 15, 3)]
+    [InlineData(0x8103, 16, 3)]
+    [InlineData(0x8113, 17, 3)]
+    [InlineData(0x81C3, 28, 3)]
+    [InlineData(0x81F3, 31, 3)]
+
+    [InlineData(0x8007, 00, 7)]
+    [InlineData(0x8017, 01, 7)]
+    [InlineData(0x8027, 02, 7)]
+    [InlineData(0x8037, 03, 7)]
+    [InlineData(0x8047, 04, 7)]
+    [InlineData(0x8057, 05, 7)]
+    [InlineData(0x80D7, 13, 7)]
+    [InlineData(0x80E7, 14, 7)]
+    [InlineData(0x80F7, 15, 7)]
+    [InlineData(0x8107, 16, 7)]
+    [InlineData(0x8117, 17, 7)]
+    [InlineData(0x81C7, 28, 7)]
+    [InlineData(0x81F7, 31, 7)]
+
+    [InlineData(0x8400, 00, 8)]
+    [InlineData(0x8410, 01, 8)]
+    [InlineData(0x8420, 02, 8)]
+    [InlineData(0x8430, 03, 8)]
+    [InlineData(0x8440, 04, 8)]
+    [InlineData(0x8450, 05, 8)]
+    [InlineData(0x84D0, 13, 8)]
+    [InlineData(0x84E0, 14, 8)]
+    [InlineData(0x84F0, 15, 8)]
+    [InlineData(0x8500, 16, 8)]
+    [InlineData(0x8510, 17, 8)]
+    [InlineData(0x85C0, 28, 8)]
+    [InlineData(0x85F0, 31, 8)]
+
+    [InlineData(0x8404, 00, 12)]
+    [InlineData(0x8414, 01, 12)]
+    [InlineData(0x8424, 02, 12)]
+    [InlineData(0x8434, 03, 12)]
+    [InlineData(0x8444, 04, 12)]
+    [InlineData(0x8454, 05, 12)]
+    [InlineData(0x84D4, 13, 12)]
+    [InlineData(0x84E4, 14, 12)]
+    [InlineData(0x84F4, 15, 12)]
+    [InlineData(0x8504, 16, 12)]
+    [InlineData(0x8514, 17, 12)]
+    [InlineData(0x85C4, 28, 12)]
+    [InlineData(0x85F4, 31, 12)]
+
+    [InlineData(0x8406, 00, 14)]
+    [InlineData(0x8416, 01, 14)]
+    [InlineData(0x8426, 02, 14)]
+    [InlineData(0x8436, 03, 14)]
+    [InlineData(0x8446, 04, 14)]
+    [InlineData(0x8456, 05, 14)]
+    [InlineData(0x84D6, 13, 14)]
+    [InlineData(0x84E6, 14, 14)]
+    [InlineData(0x84F6, 15, 14)]
+    [InlineData(0x8506, 16, 14)]
+    [InlineData(0x8516, 17, 14)]
+    [InlineData(0x85C6, 28, 14)]
+    [InlineData(0x85F6, 31, 14)]
+
+    [InlineData(0x8C00, 00, 24)]
+    [InlineData(0x8C10, 01, 24)]
+    [InlineData(0x8C20, 02, 24)]
+    [InlineData(0x8C30, 03, 24)]
+    [InlineData(0x8C40, 04, 24)]
+    [InlineData(0x8C50, 05, 24)]
+    [InlineData(0x8CD0, 13, 24)]
+    [InlineData(0x8CE0, 14, 24)]
+    [InlineData(0x8CF0, 15, 24)]
+    [InlineData(0x8D00, 16, 24)]
+    [InlineData(0x8D10, 17, 24)]
+    [InlineData(0x8DC0, 28, 24)]
+    [InlineData(0x8DF0, 31, 24)]
+
+    [InlineData(0x8C07, 00, 31)]
+    [InlineData(0x8C17, 01, 31)]
+    [InlineData(0x8C27, 02, 31)]
+    [InlineData(0x8C37, 03, 31)]
+    [InlineData(0x8C47, 04, 31)]
+    [InlineData(0x8C57, 05, 31)]
+    [InlineData(0x8CD7, 13, 31)]
+    [InlineData(0x8CE7, 14, 31)]
+    [InlineData(0x8CF7, 15, 31)]
+    [InlineData(0x8D07, 16, 31)]
+    [InlineData(0x8D17, 17, 31)]
+    [InlineData(0x8DC7, 28, 31)]
+    [InlineData(0x8DF7, 31, 31)]
+
+    [InlineData(0xA001, 00, 33)]
+    [InlineData(0xA011, 01, 33)]
+    [InlineData(0xA021, 02, 33)]
+    [InlineData(0xA031, 03, 33)]
+    [InlineData(0xA041, 04, 33)]
+    [InlineData(0xA051, 05, 33)]
+    [InlineData(0xA0D1, 13, 33)]
+    [InlineData(0xA0E1, 14, 33)]
+    [InlineData(0xA0F1, 15, 33)]
+    [InlineData(0xA101, 16, 33)]
+    [InlineData(0xA111, 17, 33)]
+    [InlineData(0xA1C1, 28, 33)]
+    [InlineData(0xA1F1, 31, 33)]
+
+    [InlineData(0xAC07, 00, 63)]
+    [InlineData(0xAC17, 01, 63)]
+    [InlineData(0xAC27, 02, 63)]
+    [InlineData(0xAC37, 03, 63)]
+    [InlineData(0xAC47, 04, 63)]
+    [InlineData(0xAC57, 05, 63)]
+    [InlineData(0xACD7, 13, 63)]
+    [InlineData(0xACE7, 14, 63)]
+    [InlineData(0xACF7, 15, 63)]
+    [InlineData(0xAD07, 16, 63)]
+    [InlineData(0xAD17, 17, 63)]
+    [InlineData(0xADC7, 28, 63)]
+    [InlineData(0xADF7, 31, 63)]
+    #endregion
+    public void DecodeInstruction_LDD_Z_test(ushort opcode, int d, int q)
+    {
+        string Mnemonics = $"LDD r{d}, Z+{q}";
+        ushort address = 0xff;
+        byte val = 0xcc;
+
+        DataBus dataBus = new();
+        var ram = new Ram(dataBus);
+        ram.RAM[address + q] = val;
+        var cpu = new CPU(dataBus, new());
+        cpu.Z = address;
+        cpu.PC = 100;
+
+        var instruction = cpu.DecodeInstruction(opcode);
+
+        Assert.Equal(Mnemonics, instruction.Mnemonics);
+
+        instruction.Executable.Invoke();
+
+        Assert.Equal(val, cpu.r[d]);
+        Assert.Equal(101, cpu.PC);
+    }
+    [Theory]
+    #region test data
     [InlineData(0x91d1, 29)]
     [InlineData(0x91c1, 28)]
     [InlineData(0x9111, 17)]
@@ -481,6 +826,7 @@ public class CPUTests
     [InlineData(0x90e1, 14)]
     [InlineData(0x9011, 1)]
     [InlineData(0x9001, 0)]
+    #endregion
     public void DecodeInstruction_LD_Z_postincrement_test(ushort opcode, ushort d)
     {
         string Mnemonics = $"LD r{d}, Z+";
@@ -508,6 +854,7 @@ public class CPUTests
     }
 
     [Theory]
+    #region test data
     [InlineData(0x91d2, 29)]
     [InlineData(0x91c2, 28)]
     [InlineData(0x9112, 17)]
@@ -516,6 +863,7 @@ public class CPUTests
     [InlineData(0x90e2, 14)]
     [InlineData(0x9012, 1)]
     [InlineData(0x9002, 0)]
+    #endregion
     public void DecodeInstruction_LD_Z_preDecremant_test(ushort opcode, ushort d)
     {
         string Mnemonics = $"LD r{d}, -Z";
@@ -618,6 +966,7 @@ public class CPUTests
     }
 
     [Theory]
+    #region test data
     [InlineData(0X9004, 0)]
     [InlineData(0X9014, 1)]
     [InlineData(0X9024, 2)]
@@ -633,6 +982,7 @@ public class CPUTests
     [InlineData(0X9114, 17)]
     [InlineData(0X91E4, 30)]
     [InlineData(0X91F4, 31)]
+    #endregion
     public void DecodeInstruction_LPM_Z_test(ushort opcode, int d)
     {
         string Mnemonics = $"LPM r{d}, Z";
@@ -661,6 +1011,7 @@ public class CPUTests
     }
 
     [Theory]
+    #region test data
     [InlineData(0X9005, 0)]
     [InlineData(0X9015, 1)]
     [InlineData(0X9025, 2)]
@@ -676,6 +1027,7 @@ public class CPUTests
     [InlineData(0X9115, 17)]
     [InlineData(0X91c5, 28)]
     [InlineData(0X91d5, 29)]
+    #endregion
     public void DecodeInstruction_LPM_Z_postdecrement_test(ushort opcode, int d)
     {
         string Mnemonics = $"LPM r{d}, Z+";
@@ -736,6 +1088,7 @@ public class CPUTests
     }
 
     [Theory]
+    #region test data
     [InlineData(0X900F,0)]
     [InlineData(0X901F,1)]
     [InlineData(0X902F,2)]
@@ -751,6 +1104,7 @@ public class CPUTests
     [InlineData(0X911F, 17)]
     [InlineData(0X91EF, 30)]
     [InlineData(0X91FF, 31)]
+    #endregion
     public void DecodeInstruction_POP_test(ushort opcode,int d)
     {
         string Mnemonics = $"POP r{d}";
@@ -777,6 +1131,7 @@ public class CPUTests
     }
 
     [Theory]
+    #region test data
     [InlineData(0X9000, 0)]
     [InlineData(0X9010, 1)]
     [InlineData(0X9020, 2)]
@@ -792,6 +1147,7 @@ public class CPUTests
     [InlineData(0X9110, 17)]
     [InlineData(0X91E0, 30)]
     [InlineData(0X91F0, 31)]
+    #endregion
     public void DecodeInstruction_LDS_Test(ushort opcode, int d)
     {
 
