@@ -86,18 +86,18 @@ here is samury of supported instruction (check :heavy_check_mark: means that is 
   <tr>
     <td>8xzz</td>
     <td colspan="2">32 ld, 224 ldd :heavy_check_mark:</td>
-    <td colspan="2">32 st, 224 std</td>
+    <td colspan="2">32 st, 224 std :heavy_check_mark:</td>
     <td colspan="2">ldd :heavy_check_mark:</td>
-    <td colspan="2">std</td>
+    <td colspan="2">std :heavy_check_mark:</td>
     <td colspan="2">ldd :heavy_check_mark:</td>
-    <td colspan="2">std</td>
+    <td colspan="2">std :heavy_check_mark:</td>
     <td colspan="2">ldd :heavy_check_mark:</td>
-    <td colspan="2">std</td>
+    <td colspan="2">std :heavy_check_mark:</td>
   </tr>
   <tr>
     <td>9xzz</td>
     <td colspan="2">(MISC) :heavy_check_mark:</td>
-    <td colspan="2">112 [R], 16 push, 112 st, 16 sts</td>
+    <td colspan="2">112 [R], 16 push, 112 st, 16 sts :heavy_check_mark:</td>
     <td>(MISC)</td>
     <td>(MISC)</td>
     <td>adiw</td>
@@ -111,13 +111,13 @@ here is samury of supported instruction (check :heavy_check_mark: means that is 
   <tr>
     <td>Axzz</td>
     <td colspan="2">ldd :heavy_check_mark:</td>
-    <td colspan="2">std</td>
+    <td colspan="2">std :heavy_check_mark:</td>
     <td colspan="2">ldd :heavy_check_mark:</td>
-    <td colspan="2">std</td>
+    <td colspan="2">std :heavy_check_mark:</td>
     <td colspan="2">ldd :heavy_check_mark:</td>
-    <td colspan="2">std</td>
+    <td colspan="2">std :heavy_check_mark:</td>
     <td colspan="2">ldd :heavy_check_mark:</td>
-    <td colspan="2">std</td>
+    <td colspan="2">std :heavy_check_mark:</td>
   </tr>
   <tr>
     <td>Bxzz</td>

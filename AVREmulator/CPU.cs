@@ -13,6 +13,10 @@ public class CPUInstruction
     public string? Operand2 { get; set; }
     public Action Executable { get; set; }
     public int  WestedCycle { get; set; }
+    /// <summary>
+    /// size of instruction in Word
+    /// </summary>
+    public int Size { get; set; } = 1;
 }
 
 /// <summary>
@@ -260,6 +264,16 @@ public class CPU
                     case int n when (n <= 0xf):return LDD_Y(opcode);
                     default: throw new UnRichabelLocationExaption();
                 }
+            case 2:
+            case 3:
+                switch (lowNipple)
+                {
+                    case 0: return ST_Z(opcode);
+                    case int n when (n <= 7): return STD_Z(opcode);
+                    case 8: return ST_Y(opcode);
+                    case int n when (n <= 0xf): return STD_Y(opcode);
+                    default: throw new UnRichabelLocationExaption();
+                }
             case 0X4:
             case 0X5:
             case 0X8:
@@ -271,10 +285,22 @@ public class CPU
                     case int n when (n <= 7): return LDD_Z(opcode);
                     case int n when (n <= 0xf): return LDD_Y(opcode);
                     default: throw new UnRichabelLocationExaption();
-                }            
+                }
+            case 0X6:
+            case 0X7:
+            case 0XA:
+            case 0XB:
+            case 0XE:
+            case 0XF:
+                switch (lowNipple)
+                {
+                    case int n when (n <= 7): return STD_Z(opcode);
+                    case int n when (n <= 0xf): return STD_Y(opcode);
+                    default: throw new UnRichabelLocationExaption();
+                }
 
         }
-        throw new NotImplementedException();
+        throw new UnRichabelLocationExaption();
     }
     /// <summary>
     /// decode any opcode start with 9
@@ -288,12 +314,11 @@ public class CPU
             throw new WrongDecoderHandlerException();
 
         if (opcode == 0x95C8) return LPM(opcode);
-
+        var lastnipple = opcode.GetNipple(0);
         switch (opcode.GetNipple(2))
         {
             case 0:
-            case 1:
-                var lastnipple = opcode.GetNipple(0);
+            case 1:                
                 switch (lastnipple)
                 {
                     case 0x0: return LDS(opcode);
@@ -312,6 +337,29 @@ public class CPU
                     case 0xD: return LD_X(opcode);
                     case 0xE: return LD_X(opcode);
                     case 0xf: return POP(opcode);
+                }
+                break;
+            case 2:
+            case 3:
+                switch (lastnipple)
+                {
+                    case 0x0:
+                        return STS(opcode);
+                    case 0x1:
+                    case 0x2:
+                        return ST_Z(opcode);
+                    case var n when (n <= 0x8):
+                        throw new ReservedInstructionExaption();
+                    case 0x9:
+                    case 0xA:
+                        return ST_Y(opcode);
+                    case 0xB:
+                    case 0xC:
+                    case 0xD:
+                    case 0xE:
+                        return ST_X(opcode);
+                    case 0xF:
+                        return PUSH(opcode);
                 }
                 break;
         }
@@ -344,9 +392,22 @@ public class CPU
                     case int n when (n <= 0xf): return LDD_Y(opcode);
                     default: throw new UnRichabelLocationExaption();
                 }
-
+            case 0X2:
+            case 0X3:
+            case 0X6:
+            case 0X7:
+            case 0XA:
+            case 0XB:
+            case 0XE:
+            case 0XF:
+                switch (lowNipple)
+                {
+                    case int n when (n <= 7): return STD_Z(opcode);
+                    case int n when (n <= 0xf): return STD_Y(opcode);
+                    default: throw new UnRichabelLocationExaption();
+                }
         }
-        throw new NotImplementedException();
+        throw new UnRichabelLocationExaption();
     }
     /// <summary>
     /// decode any opcode start with B
@@ -368,7 +429,6 @@ public class CPU
     {
         throw new NotImplementedException();
     }
-
 
     private CPUInstruction NOP(UInt16 opcode)
     {
@@ -411,6 +471,7 @@ public class CPU
 
 
     }
+
     private CPUInstruction MULS(UInt16 opcode)
     {
         //Multiply Signed
@@ -525,7 +586,7 @@ public class CPU
                     }
                 };
         }
-        throw new Exception("unknown error code should not rich this point");
+        throw new UnRichabelLocationExaption();
     }
     /// <summary>
     /// LD – Load Indirect From Data Space to Register using Index Y
@@ -623,6 +684,7 @@ public class CPU
             }
         };
     }
+    
     /// <summary>
     /// LD (LDD) – Load Indirect From Data Space to Register using Index Z
     /// </summary>
@@ -737,9 +799,281 @@ public class CPU
             Mnemonics = $"LDS r{d}, 0x{k:x4}",
             Verb = "LDS",
             WestedCycle = 2,
+            Size = 2,
             Executable = () =>
             {
                 r[d] = _dataBus.Read(k);
+                PC += 2;
+            }
+        };
+    }
+
+    /// <summary>
+    /// ST – Store Indirect From Register to Data Space using Index X
+    /// </summary>
+    /// <param name="opcode"></param>
+    /// <returns></returns>
+    /// <exception cref="WrongDecoderHandlerException"></exception>
+    private CPUInstruction ST_X(UInt16 opcode)
+    {
+        // 1001_001r_rrrr_1100 LD X , Rr
+        // 1001_001r_rrrr_1101 LD X+, Rr
+        // 1001_001r_rrrr_1110 LD -X, Rr
+        if ((opcode & 0xfe0c) != 0x920c)
+            throw new WrongDecoderHandlerException();
+
+        var r = (opcode >> 4) & 0x1f;
+
+        switch (opcode.GetNipple(0))
+        {
+            case 0xC:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"ST X, r{r}",
+                    Verb = "ST",
+                    WestedCycle = 1,
+                    Size = 1,
+                    Executable = () =>
+                    {
+                        _dataBus.Write(X, this.r[r]);
+                        PC++;
+                    }
+                };
+            case 0xD:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"ST X+, r{r}",
+                    Verb = "ST",
+                    WestedCycle = 1,
+                    Executable = () =>
+                    {
+                        if (r == 26 || r == 27)
+                            throw new UndifiendBehaviorException(opcode);
+                        _dataBus.Write(X++, this.r[r]);
+                        PC++;
+                    }
+                };
+            case 0xE:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"ST -X, r{r}",
+                    Verb = "ST",
+                    WestedCycle = 2,
+                    Executable = () =>
+                    {
+                        if (r == 26 || r == 27)
+                            throw new UndifiendBehaviorException(opcode);
+                        _dataBus.Write(--X, this.r[r]);
+                        PC++;
+                    }
+                };
+        }
+        throw new UnRichabelLocationExaption();
+    }
+
+    private CPUInstruction ST_Y(UInt16 opcode)
+    {
+        // page 119 in manual
+        //1000_001d_dddd_1000  ST  Y, Rr
+        //1001_001d_dddd_1001  ST Y+, Rr
+        //1001_001d_dddd_1010  ST -Y, Rr
+        var mask = opcode & 0xfe0f;
+        if (!(mask == 0x8208 ||
+             mask == 0x9209 ||
+             mask == 0x920A))
+        {
+            throw new WrongDecoderHandlerException();
+        }
+
+        var r = (opcode >> 4) & 0x1f;
+        switch (mask)
+        {
+            case 0x8208:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"ST Y, r{r}",
+                    Verb = "ST",
+                    WestedCycle = 1,
+                    Executable = () =>
+                    {
+                        _dataBus.Write(Y, this.r[r]);
+                        PC++;
+                    }
+                };
+            case 0x9209:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"ST Y+, r{r}",
+                    Verb = "ST",
+                    WestedCycle = 1,
+                    Executable = () =>
+                    {
+                        if (r == 28 || r == 29)
+                            throw new UndifiendBehaviorException(opcode);
+                        _dataBus.Write(Y++, this.r[r]);
+                        PC++;
+                    }
+                };
+            case 0x920A:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"ST -Y, r{r}",
+                    Verb = "ST",
+                    WestedCycle = 1,
+                    Executable = () =>
+                    {
+                        if (r == 28 || r == 29)
+                            throw new UndifiendBehaviorException(opcode);
+                        _dataBus.Write(--Y, this.r[r]);
+                        PC++;
+                    }
+                };
+        }
+
+        throw new UnRichabelLocationExaption();
+    }
+
+    /// <summary>
+    /// ST – Store Indirect From Register to Data Space using Index Z
+    /// </summary>
+    /// <param name="opcode"></param>
+    /// <returns></returns>
+    /// <exception cref="WrongDecoderHandlerException"></exception>
+    /// <exception cref="UndifiendBehaviorException"></exception>
+    /// <exception cref="UnRichabelLocationExaption"></exception>
+    private CPUInstruction ST_Z(UInt16 opcode)
+    {
+        //1000_001r_rrrr_0000  ST  Z, Rr 
+        //1001_001r_rrrr_0001  ST Z+, Rr
+        //1001_001r_rrrr_0010  ST -Z, Rr         
+        var mask = opcode & 0xfe0f;
+        if (!(mask == 0x8200 ||
+             mask == 0x9201 ||
+             mask == 0x9202))
+        {
+            throw new WrongDecoderHandlerException();
+        }
+
+        var r = (opcode >> 4) & 0x1f;
+        switch (mask)
+        {
+            case 0x8200:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"ST Z, r{r}",
+                    Verb = "ST",
+                    WestedCycle = 1,
+                    Executable = () =>
+                    {
+                        _dataBus.Write(Z, this.r[r]);
+                        PC++;
+                    }
+                };
+            case 0x9201:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"ST Z+, r{r}",
+                    Verb = "ST",
+                    WestedCycle = 1,
+                    Executable = () =>
+                    {
+                        if (r == 30 || r == 31)
+                            throw new UndifiendBehaviorException(opcode);
+                        _dataBus.Write(Z++, this.r[r]);
+                        PC++;
+                    }
+                };
+            case 0x9202:
+                return new CPUInstruction
+                {
+                    Mnemonics = $"ST -Z, r{r}",
+                    Verb = "ST",
+                    WestedCycle = 2,
+                    Executable = () =>
+                    {
+                        if (r == 30 || r == 31)
+                            throw new UndifiendBehaviorException(opcode);
+                        _dataBus.Write(--Z, this.r[r]);
+                        PC++;
+                    }
+                };
+        }
+
+        throw new UnRichabelLocationExaption();
+    }
+
+
+    /// <summary>
+    /// STD – Store (with displasment) Indirect  From Register to Data Space using Index Y
+    /// </summary>
+    /// <param name="opcode"></param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    /// <exception cref="WrongDecoderHandlerException"></exception>
+    private CPUInstruction STD_Y(UInt16 opcode)
+    {
+        // page 119
+        //10q0_qq1r_rrrr_1qqq  STD Y+q, Rr;
+        if ((opcode & 0b1101_0010_0000_1000) != 0x8208)
+            throw new WrongDecoderHandlerException();
+
+        int r = (opcode >> 4) & 0x1f;
+        int q = ((opcode & 0b0000_0111) | ((opcode >> 7) & 0b0001_1000) | ((opcode >> 8) & 0b0010_0000)) & 0b0011_1111;
+        if (q == 0) return ST_Y(opcode);
+        return new CPUInstruction
+        {
+            Mnemonics = $"STD Y+{q}, r{r}",
+            Verb = "STD",
+            WestedCycle = 2,
+            Executable = () =>
+            {
+                _dataBus.Write(Y + q, this.r[r]);
+                PC++;
+            }
+        };
+    }
+
+    private CPUInstruction STD_Z(UInt16 opcode)
+    {
+        //10q0_qq1r_rrrr_0qqq  STD Z+q, Rr ;
+        if ((opcode & 0b1101_0010_0000_1000) != 0x8200)
+            throw new WrongDecoderHandlerException();
+
+        int r = (opcode >> 4) & 0x1f;
+        int q = ((opcode & 0x7) | ((opcode >> 7) & 0x18) | ((opcode >> 8) & 0x20)) & 0x3f;
+        return new CPUInstruction
+        {
+            Mnemonics = $"STD Z+{q}, r{r}",
+            Verb = "STD",
+            WestedCycle = 2,
+            Executable = () =>
+            {
+                _dataBus.Write(Z + q, this.r[r]);
+                PC++;
+            }
+        };
+    }
+
+    private CPUInstruction STS(UInt16 opcode)
+    {
+        // page 121 in manual
+        // 1001_001d_dddd_0000  ; STS K, Rr <<< 2word  
+        // page 122
+        // 1001_1kkk_dddd_kkkk   << 1 word & 1 cycle not implemented yet
+        if ((opcode & 0xfe0f) != 0x9200)
+            throw new WrongDecoderHandlerException();
+
+        int d = (opcode >> 4) & 0x1f;
+        UInt16 k = _programBus.flashMemory.Read(PC + 1);
+        return new CPUInstruction
+        {
+            Mnemonics = $"STS 0x{k:x4}, r{d}",
+            Verb = "STS",
+            WestedCycle = 2,
+            Size = 2,
+            Executable = () =>
+            {
+                _dataBus.Write(k, this.r[d]);
                 PC += 2;
             }
         };
@@ -827,7 +1161,7 @@ public class CPU
     private CPUInstruction POP(UInt16 opcode)
     {
         //1001_000d_dddd_1111
-        if ((opcode & 0x900f) != 0x900f)
+        if ((opcode & 0xfe0f) != 0x900f)
             throw new WrongDecoderHandlerException();
         int d = (opcode >> 4) & 0x1f;
         return new CPUInstruction
@@ -838,6 +1172,26 @@ public class CPU
             Executable = () =>
             {
                 r[d] = _dataBus.Read(++SP);
+                PC++;
+            }
+        };
+    }
+
+    private CPUInstruction PUSH(UInt16 opcode)
+    {
+        // page 90
+        //1001_001d_dddd_1111
+        if ((opcode & 0xfe0f) != 0x920f)
+            throw new WrongDecoderHandlerException();
+        int d = (opcode >> 4) & 0x1f;
+        return new CPUInstruction
+        {
+            Mnemonics = $"PUSH r{d}",
+            Verb = "PUSH",
+            WestedCycle = 2,
+            Executable = () =>
+            {
+                _dataBus.Write(SP--, this.r[d]);
                 PC++;
             }
         };
