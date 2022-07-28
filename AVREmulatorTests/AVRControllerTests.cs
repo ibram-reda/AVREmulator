@@ -11,15 +11,15 @@ namespace AVREmulatorTests;
 
 public class AVRControllerTests
 {
-    [Fact]
-    public void PowerUP_Test()
-    {
-        var ContaingFolder = Directory.GetParent(Environment.CurrentDirectory)?.Parent?.Parent;
-        var path = Path.Combine(ContaingFolder.FullName, @"AVRTestProgram\ldiAndrjmp.hex");
-        AVRController Controller = new(path);
-        Controller.PowerUp();
+    //[Fact]
+    //public void PowerUP_Test()
+    //{
+    //    var ContaingFolder = Directory.GetParent(Environment.CurrentDirectory)?.Parent?.Parent;
+    //    var path = Path.Combine(ContaingFolder.FullName, @"AVRTestProgram\ldiAndrjmp.hex");
+    //    AVRController Controller = new(path);
+    //    Controller.PowerUp();
 
-        Assert.Equal(0x29, Controller.CPU.r18);
+    //    Assert.Equal(0x29, Controller.CPU.r18);
 
-    }
+    //}
 }
