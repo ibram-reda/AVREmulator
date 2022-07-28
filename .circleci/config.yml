@@ -9,7 +9,10 @@ jobs:
       - run:
           name: Run tests
           command: |
+            ls
             cd AVREmulatorTests
+            ls
+            pwd
             dotnet test
 workflows:
   sample: 
