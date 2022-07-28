@@ -1,0 +1,17 @@
+version: 2.1
+
+jobs:
+  build-and-test:
+    docker:
+      - image: mcr.microsoft.com/dotnet/sdk:6.0
+    steps:
+      - checkout
+      - run:
+          working_directory: ~/project/AVREmulatorTests
+          name: Run tests
+          command: |
+            dotnet test
+workflows:
+  sample: 
+    jobs:
+      - build-and-test
