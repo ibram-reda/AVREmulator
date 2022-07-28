@@ -7,9 +7,9 @@ jobs:
     steps:
       - checkout
       - run:
-          working_directory: ~/project/AVREmulatorTests
           name: Run tests
           command: |
+            cd AVREmulatorTests
             dotnet test
 workflows:
   sample: 
