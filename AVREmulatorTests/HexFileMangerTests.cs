@@ -1,4 +1,6 @@
 ﻿using AVREmulator;
+using System.IO;
+using System;
 using Xunit;
 
 namespace AVREmulatorTests;
@@ -9,7 +11,9 @@ public class HexFileMangerTests
     public void LoadHexFileCorrectllyToRom()
     {
         FlashMemory flash = new(new());
-        CodeBurnerEmulator.LoadFromHexFile(@".\AVRTestProgram\atmelTest.hex", flash);
+        var ContaingFolder = Directory.GetParent(Environment.CurrentDirectory)?.Parent?.Parent;
+        var path = Path.Combine(ContaingFolder.FullName, @"AVRTestProgram\atmelTest.hex");
+        CodeBurnerEmulator.LoadFromHexFile(path, flash);
 
         Assert.NotNull(flash.Memory);
 
