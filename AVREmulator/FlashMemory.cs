@@ -3,7 +3,6 @@
 public class FlashMemory
 {
     public const int MEMORY_MAX_SIZE = 0xffff;
-    private readonly ProgramBus _programBus;
     public UInt16[] Memory = new UInt16[MEMORY_MAX_SIZE];
 
     /// <summary>
@@ -42,9 +41,5 @@ public class FlashMemory
         // do not delete the mrmory of the flash
     }
 
-    public FlashMemory(ProgramBus programBus)
-    {
-        _programBus = programBus;
-        _programBus.flashMemory = this;
-    }
+    
 }

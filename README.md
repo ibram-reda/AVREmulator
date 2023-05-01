@@ -1,7 +1,8 @@
 # AVREmulator
 This is an AVR Emulator written for Fun, this emulator currently build For Atmega32, in future I hope to make it general to work with all AVR family.
 
-The resouse of information that i follow to build this emulator is
+## Resources
+The resources of information that i follow to build this emulator is
 1. book : `The AVR Microcontroller and Embedded Systems Using Assembly and C` By Muhammad Ali Mazidi
 2. [AVR opcode summary][1]
 3. [AVR instruction set manual][2]
@@ -12,7 +13,7 @@ For now there is no UI interface for the project (it will be added soon) but you
 to be able to run the code, you need the Visual Studio 22 or .net 6 SDK to be installed in your machine 
 1. Download the project : you can download it as ZIP file or through git as following
 ```cmd
-git clone https://github.com/abramReda/AVREmulator.git
+git clone https://github.com/ibram-reda/AVREmulator.git
 ```
 2. inside the project folder you can found `AVREmulator.sln` file open it with vs22
 3. to see see tests result within VS22 right click on prject name `AvREmulatorTests` and select Run Tests Then open test explorer window to see the result

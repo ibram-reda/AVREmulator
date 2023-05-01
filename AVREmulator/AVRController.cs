@@ -5,27 +5,22 @@ public class AVRController
     private readonly CPU _cpu;
     private readonly Ram _ram;
     private readonly FlashMemory _flashMemory;
-    private readonly ProgramBus _programBus;
-    private readonly DataBus _dataBus;
     
     public CPU CPU => _cpu;
     public Ram Ram => _ram;
     public FlashMemory FlashMemory => _flashMemory;
-    /// <summary>
-    /// Hardware Fuses used to controll the hardware spcification 
-    /// <br/> <br/>
-    /// for more info see page 294 in mazidi book
-    /// </summary>
-    public UInt16 HardwareFuses = 0x99E1;
+	/// <summary>
+	/// Hardware Fuses used to control the hardware specification 
+	/// <br/> <br/>
+	/// for more info see page 294 in mazidi book
+	/// </summary>
+	public UInt16 HardwareFuses = 0x99E1;
 
     public AVRController(string programHexPath)
     {
-        _programBus = new();
-        _dataBus = new();
-        _cpu = new(_dataBus, _programBus);
         _ram = new();
-        _ram.ConnectTO(_dataBus);
-        _flashMemory = new(_programBus);
+        _flashMemory = new();
+        _cpu = new(_ram,_flashMemory);
 
         CodeBurnerEmulator.LoadFromHexFile(programHexPath, _flashMemory);
     }
@@ -39,7 +34,7 @@ public class AVRController
         var consumedCycles = 0;
         while (consumedCycles < 1000)
         {
-            consumedCycles += _cpu.RunNextInstuction();
+            consumedCycles += _cpu.RunNextInstruction();
         }
     }
 

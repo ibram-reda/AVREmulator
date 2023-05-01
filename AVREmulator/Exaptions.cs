@@ -2,12 +2,12 @@
 
 namespace AVREmulator;
 
-public class UndifiendBehaviorException : Exception
+public class UndefinedBehaviorException : Exception
 {
-    public UndifiendBehaviorException(ushort opcode) : base($"opcode = 0x{opcode:x4}, has no behavior defiend by atmel")
+    public UndefinedBehaviorException(ushort opcode) : base($"opcode = 0x{opcode:x4}, has no behavior defiend by atmel")
     {
     }
-    public UndifiendBehaviorException(ushort opcode,string instruction) :base($"opcode = 0x{opcode:x4} decoded to: `{instruction}`, has no behavior defiend by atmel")
+    public UndefinedBehaviorException(ushort opcode,string instruction) :base($"opcode = 0x{opcode:x4} decoded to: `{instruction}`, has no behavior defiend by atmel")
     {
     }
 }

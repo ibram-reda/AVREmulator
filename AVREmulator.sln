@@ -3,11 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32408.312
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AVREmulator", "AVREmulator\AVREmulator.csproj", "{5DE2212F-276E-49FB-B332-1CA06C2229DA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AVREmulator", "AVREmulator\AVREmulator.csproj", "{5DE2212F-276E-49FB-B332-1CA06C2229DA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AVREmulatorTests", "AVREmulatorTests\AVREmulatorTests.csproj", "{08E4DAE0-642D-4BC0-8742-11767D2A2513}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AVREmulatorTests", "AVREmulatorTests\AVREmulatorTests.csproj", "{08E4DAE0-642D-4BC0-8742-11767D2A2513}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AVREmulator.Console", "AVREmulator.Console\AVREmulator.Console.csproj", "{CD709C6C-E55A-4A54-86E3-400E238E9704}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AVREmulator.Console", "AVREmulator.Console\AVREmulator.Console.csproj", "{CD709C6C-E55A-4A54-86E3-400E238E9704}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AVREmulator.UI", "AVREmulator.UI\AVREmulator.UI.csproj", "{06A5BCBD-EA52-441B-8CDA-D4C4417ABB2B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{CD709C6C-E55A-4A54-86E3-400E238E9704}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CD709C6C-E55A-4A54-86E3-400E238E9704}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CD709C6C-E55A-4A54-86E3-400E238E9704}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06A5BCBD-EA52-441B-8CDA-D4C4417ABB2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06A5BCBD-EA52-441B-8CDA-D4C4417ABB2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06A5BCBD-EA52-441B-8CDA-D4C4417ABB2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06A5BCBD-EA52-441B-8CDA-D4C4417ABB2B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

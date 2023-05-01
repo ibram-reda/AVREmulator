@@ -11,7 +11,7 @@ public class CPUInstruction
     public string Verb { get; set; } = string.Empty;
     public string? Operand1 { get; set; }
     public string? Operand2 { get; set; }
-    public Action Executable { get; set; }
+    public Action Executable { get; set; } = () => { };
     public int  WestedCycle { get; set; }
     /// <summary>
     /// size of instruction in Word
@@ -20,97 +20,97 @@ public class CPUInstruction
 }
 
 /// <summary>
-/// a class to Emulate the real AVR CPU,  it contains all register insed the avr cpu
-/// and also contains all the logic suported by the instruction of avr cpu
+/// a class to Emulate the real AVR CPU, it contains all register in the avr cpu
+/// and also contains all the logic for avr cpu instructions
 /// <br/>
-/// CPU is comunicate and controll ram and other peripherals through <see cref="DataBus"/> and <see cref="ProgramBus"/> to get Data and code respectivley
-/// so we should pass them as a constractor dependancy
+/// CPU is communicate and control the ram and other peripherals through <see cref="DataBus"/> and <see cref="ProgramBus"/> to get Data and code respectively
+/// so we should pass them as a constructor dependency
 /// </summary>
-public class CPU
+public partial class CPU
 {
     #region registers
     /// <summary>
-    /// stack pinter
+    /// stack pointer
     /// </summary>
-    public UInt16 SP { get; set; } = UInt16.MaxValue;
+    public UInt16 SP { get; internal set; } = UInt16.MaxValue;
     /// <summary>
     /// Program counter
     /// </summary>
-    public int PC { get; set; } = 0;
+    public int PC { get; internal set; } = 0;
     /// <summary>
     /// Status Register
     /// </summary>
-    public byte SReg { get; set; } = 0;
+    public byte SReg { get; internal set; } = 0;
 
-    /// <summary>
-    /// array of general perpose registers r0-r31
-    /// </summary>
-    public readonly byte[] r = new byte[32];
-    private readonly DataBus _dataBus;
-    private readonly ProgramBus _programBus;
+	/// <summary>
+	/// array of general purpose registers r0-r31
+	/// </summary>
+	public readonly ArraySegment<byte> r ;
+    private readonly Ram _ram;
+    private readonly FlashMemory _flashMemory;
 
-    public byte r0 { get => r[0]; set => r[0] = value; }
-    public byte r1 { get => r[1]; set => r[1] = value; }
-    public byte r2 { get => r[2]; set => r[2] = value; }
-    public byte r3 { get => r[3]; set => r[3] = value; }
-    public byte r4 { get => r[4]; set => r[4] = value; }
-    public byte r5 { get => r[5]; set => r[5] = value; }
-    public byte r6 { get => r[6]; set => r[6] = value; }
-    public byte r7 { get => r[7]; set => r[7] = value; }
-    public byte r8 { get => r[8]; set => r[8] = value; }
-    public byte r9 { get => r[9]; set => r[9] = value; }
-    public byte r10 { get => r[10]; set => r[10] = value; }
-    public byte r11 { get => r[11]; set => r[11] = value; }
-    public byte r12 { get => r[12]; set => r[12] = value; }
-    public byte r13 { get => r[13]; set => r[13] = value; }
-    public byte r14 { get => r[14]; set => r[14] = value; }
-    public byte r15 { get => r[15]; set => r[15] = value; }
-    public byte r16 { get => r[16]; set => r[16] = value; }
-    public byte r17 { get => r[17]; set => r[17] = value; }
-    public byte r18 { get => r[18]; set => r[18] = value; }
-    public byte r19 { get => r[19]; set => r[19] = value; }
-    public byte r20 { get => r[20]; set => r[20] = value; }
-    public byte r21 { get => r[21]; set => r[21] = value; }
-    public byte r22 { get => r[22]; set => r[22] = value; }
-    public byte r23 { get => r[23]; set => r[23] = value; }
-    public byte r24 { get => r[24]; set => r[24] = value; }
-    public byte r25 { get => r[25]; set => r[25] = value; }
-    public byte r26 { get => r[26]; set => r[26] = value; }
-    public byte r27 { get => r[27]; set => r[27] = value; }
-    public byte r28 { get => r[28]; set => r[28] = value; }
-    public byte r29 { get => r[29]; set => r[29] = value; }
-    public byte r30 { get => r[30]; set => r[30] = value; }
-    public byte r31 { get => r[31]; set => r[31] = value; }
+    public byte r0 { get => r[0];   internal set => r[0] = value; }
+    public byte r1 { get => r[1];   internal set => r[1] = value; }
+    public byte r2 { get => r[2];   internal set => r[2] = value; }
+    public byte r3 { get => r[3];   internal set => r[3] = value; }
+    public byte r4 { get => r[4];   internal set => r[4] = value; }
+    public byte r5 { get => r[5];   internal set => r[5] = value; }
+    public byte r6 { get => r[6];   internal set => r[6] = value; }
+    public byte r7 { get => r[7];   internal set => r[7] = value; }
+    public byte r8 { get => r[8];   internal set => r[8] = value; }
+    public byte r9 { get => r[9];   internal set => r[9] = value; }
+    public byte r10 { get => r[10]; internal set => r[10] = value; }
+    public byte r11 { get => r[11]; internal set => r[11] = value; }
+    public byte r12 { get => r[12]; internal set => r[12] = value; }
+    public byte r13 { get => r[13]; internal set => r[13] = value; }
+    public byte r14 { get => r[14]; internal set => r[14] = value; }
+    public byte r15 { get => r[15]; internal set => r[15] = value; }
+    public byte r16 { get => r[16]; internal set => r[16] = value; }
+    public byte r17 { get => r[17]; internal set => r[17] = value; }
+    public byte r18 { get => r[18]; internal set => r[18] = value; }
+    public byte r19 { get => r[19]; internal set => r[19] = value; }
+    public byte r20 { get => r[20]; internal set => r[20] = value; }
+    public byte r21 { get => r[21]; internal set => r[21] = value; }
+    public byte r22 { get => r[22]; internal set => r[22] = value; }
+    public byte r23 { get => r[23]; internal set => r[23] = value; }
+    public byte r24 { get => r[24]; internal set => r[24] = value; }
+    public byte r25 { get => r[25]; internal set => r[25] = value; }
+    public byte r26 { get => r[26]; internal set => r[26] = value; }
+    public byte r27 { get => r[27]; internal set => r[27] = value; }
+    public byte r28 { get => r[28]; internal set => r[28] = value; }
+    public byte r29 { get => r[29]; internal set => r[29] = value; }
+    public byte r30 { get => r[30]; internal set => r[30] = value; }
+    public byte r31 { get => r[31]; internal set => r[31] = value; }
 
     public UInt16 X
     {
-        get => BitConverter.ToUInt16(r, 26);
-        set => BitConverter.GetBytes(value).CopyTo(r, 26);
+        get => BitConverter.ToUInt16(r.Array!, 26);
+		internal set => BitConverter.GetBytes(value).CopyTo(r.Array!, 26);
     }
     public UInt16 Y 
     {
-        get => BitConverter.ToUInt16(r, 28);
-        set => BitConverter.GetBytes(value).CopyTo(r, 28);
+        get => BitConverter.ToUInt16(r.Array!, 28);
+		internal set => BitConverter.GetBytes(value).CopyTo(r.Array!, 28);
     }
     public UInt16 Z 
     { 
-        get => BitConverter.ToUInt16(r, 30); 
-        set => BitConverter.GetBytes(value).CopyTo(r, 30); 
+        get => BitConverter.ToUInt16(r.Array!, 30);
+		internal set => BitConverter.GetBytes(value).CopyTo(r.Array!, 30); 
     }
-    #endregion
+	#endregion
 
-    #region ctor
-    /// <summary>
-    /// Emulate the real AVR CPU,  it contains all register and instruction set behaviors
-    /// </summary>
-    /// <param name="dataBus">data bus which allow cpu to comunicate with ram and other peripherals sauch as Timer,ADC,URT..etc</param>
-    /// <param name="programBus">program /or code bus is used to fetch next Instruction opcode from Flash memory </param>
-    public CPU(DataBus dataBus, ProgramBus programBus)
+	#region ctor
+	/// <summary>
+	/// Emulate the real AVR CPU,  it contains all register and instruction set behaviors
+	/// </summary>
+	/// <param name="dataBus">data bus which allow cpu to communicate with ram and other peripherals such as Timer,ADC,URT..etc</param>
+	/// <param name="programBus">program /or code bus is used to fetch next Instruction opcode from Flash memory </param>
+	public CPU(Ram ram, FlashMemory flashMemory)
     {
-        Reset();
-        _dataBus = dataBus;
-        _programBus = programBus;
-    }
+		_ram = ram;
+		_flashMemory = flashMemory;
+        r = _ram.GetPortion(0, 32);
+	}
     #endregion
 
     #region Main cpu functions
@@ -135,16 +135,16 @@ public class CPU
     /// <returns>the opcode in location of program counter register</returns>
     public UInt16 FetchInstruction()
     {
-        return _programBus.flashMemory.Read(PC);
+        return _flashMemory.Read(PC++);
     }
 
-    /// <summary>
-    /// undarstnd the opcode and translate it to the corsponding instruction
-    /// </summary>
-    /// <param name="opcode"></param>
-    /// <returns>CPU executable instruction</returns>
-    /// <exception cref="NotImplementedException"></exception>
-    public CPUInstruction DecodeInstruction(UInt16 opcode)
+	/// <summary>
+	/// understand the opcode and translate it to the corresponding instruction
+	/// </summary>
+	/// <param name="opcode"></param>
+	/// <returns>CPU executable instruction</returns>
+	/// <exception cref="NotImplementedException"></exception>
+	public CPUInstruction DecodeInstruction(UInt16 opcode)
     {
         var lastNipple = opcode.GetNipple(3);
 
@@ -168,7 +168,7 @@ public class CPU
             case 0xF: return GroupF(opcode);
 
             default:
-                throw new Exception("something went wrong,should not reach that line ever");
+                throw new Exception("something went wrong, should not reach that line ever");
         }
     }
         
@@ -182,23 +182,23 @@ public class CPU
         instruction.Executable.Invoke();
         return instruction.WestedCycle;
     }
-    public int RunNextInstuction()
+    public int RunNextInstruction()
     {
         var opcode = FetchInstruction();
         var instruction = DecodeInstruction(opcode);
         return ExecuteInstruction(instruction);
     }
-    #endregion
+	#endregion
 
-    #region cpu Instruction factories
+	#region cpu Instruction factories
 
-    /// <summary>
-    /// decode any opcode start with 0
-    /// </summary>
-    /// <param name="opcode">opcode look like 0x0kkk</param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException">if the opcode desnote start with 0</exception>
-    private CPUInstruction Group0(UInt16 opcode)
+	/// <summary>
+	/// decode any opcode start with 0
+	/// </summary>
+	/// <param name="opcode">opcode look like 0x0kkk</param>
+	/// <returns></returns>
+	/// <exception cref="WrongDecoderHandlerException">if the opcode doesn't start with 0</exception>
+	private CPUInstruction Group0(UInt16 opcode)
     {
         if (opcode.GetNipple(3) != 0)
             throw new WrongDecoderHandlerException(); 
@@ -212,26 +212,27 @@ public class CPU
         }
 
     }
-    /// <summary>
-    /// decode any opcode start with 1
-    /// </summary>
-    /// <param name="opcode">opcode look like 0x1kkk</param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException">if the opcode desnote start with 1</exception>   
-    private CPUInstruction Group1(ushort opcode)
+	/// <summary>
+	/// decode any opcode start with 1
+	/// </summary>
+	/// <param name="opcode">opcode look like 0x1kkk</param>
+	/// <returns></returns>
+	/// <exception cref="WrongDecoderHandlerException">if the opcode doesn't start with 1</exception>   
+	private CPUInstruction Group1(ushort opcode)
     {
         throw new NotImplementedException();
     }
-    /// <summary>
-    /// decode any opcode start with 2
-    /// </summary>
-    /// <param name="opcode">opcode look like 0x2kkk</param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException">if the opcode desnote start with 2</exception>
-    private CPUInstruction Group2(ushort opcode)
+	/// <summary>
+	/// decode any opcode start with 2
+	/// </summary>
+	/// <param name="opcode">opcode look like 0x2kkk</param>
+	/// <returns></returns>
+	/// <exception cref="WrongDecoderHandlerException">if the opcode doesn't start with 2</exception>
+	private CPUInstruction Group2(ushort opcode)
     {
         if (opcode.GetNipple(3) != 2)
             throw new WrongDecoderHandlerException();
+
         switch (opcode.GetNipple(2))
         {
             case 0XC: return MOV(opcode);
@@ -241,16 +242,17 @@ public class CPU
         }
         throw new NotImplementedException();
     }
-    /// <summary>
-    /// decode any opcode start with 8
-    /// </summary>
-    /// <param name="opcode">opcode look like 0x8kkk</param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException">if the opcode desnote start with 8</exception>
-    private CPUInstruction Group8(ushort opcode)
+	/// <summary>
+	/// decode any opcode start with 8
+	/// </summary>
+	/// <param name="opcode">opcode look like 0x8kkk</param>
+	/// <returns></returns>
+	/// <exception cref="WrongDecoderHandlerException">if the opcode doesn't start with 8</exception>
+	private CPUInstruction Group8(ushort opcode)
     {
         if (opcode.GetNipple(3) != 8)
             throw new WrongDecoderHandlerException();
+
         int lowNipple = opcode.GetNipple(0);
         switch (opcode.GetNipple(2))
         {
@@ -438,7 +440,7 @@ public class CPU
         {
             Mnemonics = "NOP",
             Verb = "NOP",
-            Executable = () => PC++,
+            Executable = () => { },
             WestedCycle = 1,
         };
     }
@@ -464,7 +466,6 @@ public class CPU
             {
                 r[distReg] = r[sourceReg];
                 r[distReg+1] = r[sourceReg+1];
-                PC++;
             },
             WestedCycle = 1
         };
@@ -496,8 +497,6 @@ public class CPU
                 if (result > short.MaxValue || result < short.MinValue )
                     SetFlag(Flag.C);
                 else ClearFlag(Flag.C);
-
-                PC++;
             },
             WestedCycle = 1,
 
@@ -521,7 +520,6 @@ public class CPU
             Executable = () =>
             {
                 r[d] = r[source];
-                PC++;
             }
         };
 
@@ -553,8 +551,7 @@ public class CPU
                     WestedCycle = 1,
                     Executable = () =>
                     {
-                        r[d] = _dataBus.Read(X);
-                        PC++;
+                        r[d] = _ram.Read(X);
                     }
                 };
             case 0xD:
@@ -566,9 +563,8 @@ public class CPU
                     Executable = () =>
                     {
                         if (d == 26 || d == 27)
-                            throw new UndifiendBehaviorException(opcode, $"LD r{d}, X+");
-                        r[d] = _dataBus.Read(X++);
-                        PC++;
+                            throw new UndefinedBehaviorException(opcode, $"LD r{d}, X+");
+                        r[d] = _ram.Read(X++);
                     }
                 };
             case 0xE:
@@ -580,9 +576,8 @@ public class CPU
                     Executable = () =>
                     {
                         if (d == 26 || d == 27)
-                            throw new UndifiendBehaviorException(opcode, $"LD r{d}, -X");
-                        r[d] = _dataBus.Read(--X);
-                        PC++;
+                            throw new UndefinedBehaviorException(opcode, $"LD r{d}, -X");
+                        r[d] = _ram.Read(--X);
                     }
                 };
         }
@@ -594,7 +589,7 @@ public class CPU
     /// <param name="opcode"></param>
     /// <returns></returns>
     /// <exception cref="WrongDecoderHandlerException"></exception>
-    /// <exception cref="UndifiendBehaviorException"></exception>
+    /// <exception cref="UndefinedBehaviorException"></exception>
     /// <exception cref="NotImplementedException"></exception>
     private CPUInstruction LD_Y(UInt16 opcode)
     {
@@ -621,8 +616,7 @@ public class CPU
                     WestedCycle = 1,
                     Executable = () =>
                     {
-                        r[d] = _dataBus.Read(Y);
-                        PC++;
+                        r[d] = _ram.Read(Y);
                     }
                 };
             case 0x9009:
@@ -634,9 +628,8 @@ public class CPU
                     Executable = () =>
                     {
                         if (d == 28 || d == 29)
-                            throw new UndifiendBehaviorException(opcode);
-                        r[d] = _dataBus.Read(Y++);
-                        PC++;
+                            throw new UndefinedBehaviorException(opcode);
+                        r[d] = _ram.Read(Y++);
                     }
                 };
             case 0x900A:
@@ -648,9 +641,8 @@ public class CPU
                     Executable = () =>
                     {
                         if (d == 28 || d == 29)
-                            throw new UndifiendBehaviorException(opcode);
-                        r[d] = _dataBus.Read(--Y);
-                        PC++;
+                            throw new UndefinedBehaviorException(opcode);
+                        r[d] = _ram.Read(--Y);
                     }
                 };
         }
@@ -679,8 +671,7 @@ public class CPU
             WestedCycle = 2,
             Executable = () =>
             {
-                r[d] = _dataBus.Read(Y + q);
-                PC++;
+                r[d] = _ram.Read(Y + q);
             }
         };
     }
@@ -691,7 +682,7 @@ public class CPU
     /// <param name="opcode"></param>
     /// <returns></returns>
     /// <exception cref="WrongDecoderHandlerException"></exception>
-    /// <exception cref="UndifiendBehaviorException"></exception>
+    /// <exception cref="UndefinedBehaviorException"></exception>
     /// <exception cref="NotImplementedException"></exception>
     private CPUInstruction LD_Z(UInt16 opcode)
     {
@@ -717,8 +708,7 @@ public class CPU
                     WestedCycle = 1,
                     Executable = () =>
                     {
-                        r[d] = _dataBus.Read(Z);
-                        PC++;
+                        r[d] = _ram.Read(Z);
                     }
                 };
             case 0x9001:
@@ -730,9 +720,8 @@ public class CPU
                     Executable = () =>
                     {
                         if (d == 30 || d == 31)
-                            throw new UndifiendBehaviorException(opcode);
-                        r[d] = _dataBus.Read(Z++);
-                        PC++;
+                            throw new UndefinedBehaviorException(opcode);
+                        r[d] = _ram.Read(Z++);
                     }
                 };
             case 0x9002:
@@ -744,9 +733,8 @@ public class CPU
                     Executable = () =>
                     {
                         if (d == 30 || d == 31)
-                            throw new UndifiendBehaviorException(opcode);
-                        r[d] = _dataBus.Read(--Z);
-                        PC++;
+                            throw new UndefinedBehaviorException(opcode);
+                        r[d] = _ram.Read(--Z);
                     }
                 };
         }
@@ -775,8 +763,7 @@ public class CPU
             WestedCycle = 2,
             Executable = () =>
             {
-                r[d] = _dataBus.Read(Z + q);
-                PC++;
+                r[d] = _ram.Read(Z + q);
             }
         };
     }
@@ -793,7 +780,7 @@ public class CPU
             throw new WrongDecoderHandlerException();
 
         int d = (opcode >> 4) & 0x1f;
-        UInt16 k = _programBus.flashMemory.Read(PC+1);
+        UInt16 k = FetchInstruction(); // load the parameter
         return new CPUInstruction
         {
             Mnemonics = $"LDS r{d}, 0x{k:x4}",
@@ -802,8 +789,7 @@ public class CPU
             Size = 2,
             Executable = () =>
             {
-                r[d] = _dataBus.Read(k);
-                PC += 2;
+                r[d] = _ram.Read(k);
             }
         };
     }
@@ -835,8 +821,7 @@ public class CPU
                     Size = 1,
                     Executable = () =>
                     {
-                        _dataBus.Write(X, this.r[r]);
-                        PC++;
+                        _ram.Write(X, this.r[r]);
                     }
                 };
             case 0xD:
@@ -848,9 +833,8 @@ public class CPU
                     Executable = () =>
                     {
                         if (r == 26 || r == 27)
-                            throw new UndifiendBehaviorException(opcode);
-                        _dataBus.Write(X++, this.r[r]);
-                        PC++;
+                            throw new UndefinedBehaviorException(opcode);
+                        _ram.Write(X++, this.r[r]);
                     }
                 };
             case 0xE:
@@ -862,9 +846,8 @@ public class CPU
                     Executable = () =>
                     {
                         if (r == 26 || r == 27)
-                            throw new UndifiendBehaviorException(opcode);
-                        _dataBus.Write(--X, this.r[r]);
-                        PC++;
+                            throw new UndefinedBehaviorException(opcode);
+                        _ram.Write(--X, this.r[r]);
                     }
                 };
         }
@@ -896,8 +879,7 @@ public class CPU
                     WestedCycle = 1,
                     Executable = () =>
                     {
-                        _dataBus.Write(Y, this.r[r]);
-                        PC++;
+                        _ram.Write(Y, this.r[r]);
                     }
                 };
             case 0x9209:
@@ -909,9 +891,8 @@ public class CPU
                     Executable = () =>
                     {
                         if (r == 28 || r == 29)
-                            throw new UndifiendBehaviorException(opcode);
-                        _dataBus.Write(Y++, this.r[r]);
-                        PC++;
+                            throw new UndefinedBehaviorException(opcode);
+                        _ram.Write(Y++, this.r[r]);
                     }
                 };
             case 0x920A:
@@ -923,9 +904,8 @@ public class CPU
                     Executable = () =>
                     {
                         if (r == 28 || r == 29)
-                            throw new UndifiendBehaviorException(opcode);
-                        _dataBus.Write(--Y, this.r[r]);
-                        PC++;
+                            throw new UndefinedBehaviorException(opcode);
+                        _ram.Write(--Y, this.r[r]);
                     }
                 };
         }
@@ -939,7 +919,7 @@ public class CPU
     /// <param name="opcode"></param>
     /// <returns></returns>
     /// <exception cref="WrongDecoderHandlerException"></exception>
-    /// <exception cref="UndifiendBehaviorException"></exception>
+    /// <exception cref="UndefinedBehaviorException"></exception>
     /// <exception cref="UnRichabelLocationExaption"></exception>
     private CPUInstruction ST_Z(UInt16 opcode)
     {
@@ -965,8 +945,7 @@ public class CPU
                     WestedCycle = 1,
                     Executable = () =>
                     {
-                        _dataBus.Write(Z, this.r[r]);
-                        PC++;
+                        _ram.Write(Z, this.r[r]);
                     }
                 };
             case 0x9201:
@@ -978,9 +957,8 @@ public class CPU
                     Executable = () =>
                     {
                         if (r == 30 || r == 31)
-                            throw new UndifiendBehaviorException(opcode);
-                        _dataBus.Write(Z++, this.r[r]);
-                        PC++;
+                            throw new UndefinedBehaviorException(opcode);
+                        _ram.Write(Z++, this.r[r]);
                     }
                 };
             case 0x9202:
@@ -992,9 +970,8 @@ public class CPU
                     Executable = () =>
                     {
                         if (r == 30 || r == 31)
-                            throw new UndifiendBehaviorException(opcode);
-                        _dataBus.Write(--Z, this.r[r]);
-                        PC++;
+                            throw new UndefinedBehaviorException(opcode);
+                        _ram.Write(--Z, this.r[r]);
                     }
                 };
         }
@@ -1027,8 +1004,7 @@ public class CPU
             WestedCycle = 2,
             Executable = () =>
             {
-                _dataBus.Write(Y + q, this.r[r]);
-                PC++;
+                _ram.Write(Y + q, this.r[r]);
             }
         };
     }
@@ -1048,8 +1024,7 @@ public class CPU
             WestedCycle = 2,
             Executable = () =>
             {
-                _dataBus.Write(Z + q, this.r[r]);
-                PC++;
+                _ram.Write(Z + q, this.r[r]);
             }
         };
     }
@@ -1064,7 +1039,7 @@ public class CPU
             throw new WrongDecoderHandlerException();
 
         int d = (opcode >> 4) & 0x1f;
-        UInt16 k = _programBus.flashMemory.Read(PC + 1);
+        UInt16 k = FetchInstruction(); // load the parameter k
         return new CPUInstruction
         {
             Mnemonics = $"STS 0x{k:x4}, r{d}",
@@ -1073,8 +1048,7 @@ public class CPU
             Size = 2,
             Executable = () =>
             {
-                _dataBus.Write(k, this.r[d]);
-                PC += 2;
+                _ram.Write(k, this.r[d]);
             }
         };
     }
@@ -1085,7 +1059,7 @@ public class CPU
     /// <param name="opcode"></param>
     /// <returns></returns>
     /// <exception cref="WrongDecoderHandlerException"></exception>
-    /// <exception cref="UndifiendBehaviorException"></exception>
+    /// <exception cref="UndefinedBehaviorException"></exception>
     /// <exception cref="UnRichabelLocationExaption"></exception>
     private CPUInstruction LPM(UInt16 opcode)
     {
@@ -1107,9 +1081,8 @@ public class CPU
                 WestedCycle = 3,
                 Executable = () =>
                 {
-                    var val = _programBus.flashMemory.Read(Z >> 1);
+                    var val = _flashMemory.Read(Z >> 1);
                     r0 = Z.GetBit(0) ? (byte)(val >> 8):(byte)val;
-                    PC++;
                 }
             };
         
@@ -1124,9 +1097,8 @@ public class CPU
                     WestedCycle = 3,
                     Executable = () =>
                     {
-                        var val = _programBus.flashMemory.Read(Z >> 1);
+                        var val = _flashMemory.Read(Z >> 1);
                         r[d] = Z.GetBit(0) ? (byte)(val >> 8) : (byte)val;
-                        PC++;
                     }
 
                 };
@@ -1139,12 +1111,11 @@ public class CPU
                     Executable = () =>
                     {
                         if (d == 30 || d == 31)
-                            throw new UndifiendBehaviorException(opcode);
+                            throw new UndefinedBehaviorException(opcode);
 
-                        var val = _programBus.flashMemory.Read(Z >> 1);
+                        var val = _flashMemory.Read(Z >> 1);
                         r[d] = Z.GetBit(0) ? (byte)(val >> 8) : (byte)val;
                         Z++;
-                        PC++;
                     }
 
                 };
@@ -1171,8 +1142,7 @@ public class CPU
             WestedCycle = 2,
             Executable = () =>
             {
-                r[d] = _dataBus.Read(++SP);
-                PC++;
+                r[d] = _ram.Read(++SP);
             }
         };
     }
@@ -1191,8 +1161,7 @@ public class CPU
             WestedCycle = 2,
             Executable = () =>
             {
-                _dataBus.Write(SP--, this.r[d]);
-                PC++;
+                _ram.Write(SP--, this.r[d]);
             }
         };
     }
@@ -1220,7 +1189,6 @@ public class CPU
             Executable = () =>
             {
                 r[d] = k;
-                PC++;
             },
             WestedCycle = 1
         };               
@@ -1306,7 +1274,7 @@ public class CPU
             Mnemonics = $"RJMP 0X{k:x3}",
             Verb = "RJMP",
             Operand1 = $"0x{k:x3}",
-            Executable = () => PC += k + 1,
+            Executable = () => PC += k ,
             WestedCycle = 2
         };
     }

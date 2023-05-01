@@ -42,7 +42,7 @@ internal class LineDiscription
     public LineDiscription(string line)
     {
         if (!line.StartsWith(':'))
-            throw new ArgumentException("in intel hexfile line should start with ':'");
+            throw new ArgumentException("in intel hex-file line should start with ':'");
 
         string size = line.Substring(1, 2);
         Size = Convert.ToUInt16(size, 16);

@@ -34,4 +34,19 @@ public class RamTests
         
         Assert.Equal(0, actualValue);
     }
+
+    [Fact]
+    public void GetPortionTest()
+    {
+        int startIndx = 10;
+        int count = 5;
+
+        _ram[startIndx]= 0b1100_0101;
+        var Portion = _ram.GetPortion(startIndx, count);
+
+        Assert.Equal(count, Portion.Count);
+        Assert.Equal(_ram[startIndx], Portion[0]);
+
+
+    }
 }

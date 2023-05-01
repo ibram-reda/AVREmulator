@@ -1,0 +1,112 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:AVREmulator.UI.Views"
+        xmlns:con="using:AVREmulator.UI.Converters"
+        xmlns:controls="using:AVREmulator.UI.Views">
+
+  <Styles.Resources>
+    <con:BitConverter x:Key="BitConverter"/>
+  </Styles.Resources>
+  
+  <Design.PreviewWith>
+    <StackPanel Spacing="10">
+      <controls:RegisterControl />
+      <controls:RegisterControl  Classes="wide"/>
+     
+    </StackPanel>
+  </Design.PreviewWith>
+
+  
+  <Style Selector="controls|RegisterControl">
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Grid Background="Transparent"
+              ColumnDefinitions="100,auto,50">
+          
+          <TextBlock Text="{TemplateBinding RegName}"
+                     TextAlignment="Right"
+                     Margin="0 0 10 0"
+                     TextWrapping="WrapWithOverflow"
+                     VerticalAlignment="Center" />
+       
+          <Border Grid.Column="1"
+                  BorderThickness="1"
+                  BorderBrush="AliceBlue"
+                  Padding="5">
+            <StackPanel
+                      Orientation="Horizontal"
+                      Spacing="5"
+                      Height="10">
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=0}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=1}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=2}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=3}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=4}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=5}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=6}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=7}"/>
+              
+            </StackPanel>
+          </Border>
+          
+          <TextBlock Grid.Column="2" Text="{TemplateBinding RegValue}" TextAlignment="Center" VerticalAlignment="Center"  />        </Grid>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+
+  <Style Selector="controls|RegisterControl.wide">
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Grid Background="Transparent"
+              ColumnDefinitions="100,auto,auto,50">
+
+          <TextBlock Text="{TemplateBinding RegName}"
+                     TextAlignment="Right"
+                     Margin="0 0 10 0"
+                     TextWrapping="WrapWithOverflow"
+                     VerticalAlignment="Center" />
+
+          <Border Grid.Column="1"
+                  BorderThickness="1"
+                  BorderBrush="AliceBlue"
+                  Padding="5">
+            <StackPanel
+                      Orientation="Horizontal"
+                      Spacing="5"
+                      Height="10">
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=0}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=1}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=2}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=3}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=4}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=5}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=6}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=7}"/>
+            </StackPanel>
+          </Border>
+
+          <Border Grid.Column="2"
+                  BorderThickness="1"
+                  BorderBrush="AliceBlue"
+                  Padding="5">
+            <StackPanel
+                      Orientation="Horizontal"
+                      Spacing="5"
+                      Height="10">
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=8}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=9}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=10}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=11}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=12}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=13}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=14}"/>
+              <local:BitBoxControl BitValue="{TemplateBinding RegValue,Converter={StaticResource BitConverter},ConverterParameter=15}"/>
+            </StackPanel>
+          </Border>
+
+          <TextBlock Grid.Column="2" Text="{TemplateBinding RegValue}" TextAlignment="Center" VerticalAlignment="Center"  />
+        </Grid>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+</Styles>

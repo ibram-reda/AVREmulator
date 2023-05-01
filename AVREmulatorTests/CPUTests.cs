@@ -1,23 +1,19 @@
 ﻿//#define RequiredHavyTest 
 using AVREmulator;
+using System;
 using Xunit;
 
 namespace AVREmulatorTests;
 public class CPUTests
 {
     private readonly CPU _cpu;
-    private readonly DataBus _dataBus;
-    private readonly ProgramBus _programBus;
     private readonly Ram _ram;
     private readonly FlashMemory _flashMemory;
     public CPUTests()
     {
-        _dataBus = new();
-        _programBus = new();
         _ram = new();
-        _ram.ConnectTO(_dataBus);
-        _cpu = new(_dataBus, _programBus);
-        _flashMemory = new(_programBus);
+        _flashMemory = new();
+        _cpu = new(_ram,_flashMemory);
     }
 
     [Fact]
@@ -38,12 +34,23 @@ public class CPUTests
     }
 
     [Fact]
+    public void FeatchInstruction_success()
+    {
+        int address = 0xacd;
+        UInt16 val = 0xca52;
+
+        _flashMemory.Write(address, val);
+        _cpu.PC = (ushort)address;
+
+        var opcode = _cpu.FetchInstruction();
+        Assert.Equal(val, opcode);
+        Assert.Equal(address+1, _cpu.PC);
+    }
+
+    [Fact]
     public void DecodeInstruction_nop_test()
     {
         ushort opcode = 0;
-        var pc = 52;
-       
-        _cpu.PC = pc;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -51,8 +58,7 @@ public class CPUTests
         Assert.Equal("NOP", instruction.Mnemonics);
         Assert.Equal(1, instruction.WestedCycle);
 
-        instruction.Executable.Invoke();
-        Assert.Equal(pc + 1, _cpu.PC);
+        //Assert.Equal(() => { }, instruction.Executable);
     }
 
     [Theory]
@@ -114,9 +120,9 @@ public class CPUTests
 
     [Theory]
     #region test data
-    [InlineData(0xcfff, 0x12, -01, 0x12)]
-    [InlineData(0xcffE, 0x12, -02, 0x11)]
-    [InlineData(0xc002, 0x12, 02, 0x15)]
+    [InlineData(0xcfff, 0x12, -01, 0x11)]
+    [InlineData(0xcffE, 0x12, -02, 0x10)]
+    [InlineData(0xc002, 0x12, 02, 0x14)]
     #endregion
     public void DecodeInstruction_RJMP_test(ushort opcode, int pc, int k, int ExpectedPC)
     {
@@ -139,7 +145,6 @@ public class CPUTests
         ushort opcode = 0x016E; // movw r12, r28
         _cpu.r28 = 0xf5;
         _cpu.r29 = 0x68;
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
         instruction.Executable.Invoke();
@@ -149,7 +154,7 @@ public class CPUTests
         Assert.Equal("MOVW", instruction.Verb);
         Assert.Equal(1, instruction.WestedCycle);
         Assert.Equal("MOVW r12, r28", instruction.Mnemonics, ignoreCase: true);
-        Assert.Equal(101, _cpu.PC);
+        
     }
 
     [Theory]
@@ -171,7 +176,6 @@ public class CPUTests
                 
         _ram.RAM[address] = val;
         _cpu.X = address;
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -180,7 +184,6 @@ public class CPUTests
         instruction.Executable.Invoke();
 
         Assert.Equal(val, _cpu.r[d]);
-        Assert.Equal(101, _cpu.PC);
     }
 
     [Theory]
@@ -234,7 +237,7 @@ public class CPUTests
         _ram.RAM[address] = val;
         _cpu.X = address;
         _cpu.X++; // should be decrement to address afterr execution
-        _cpu.PC = 100;
+        
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -244,7 +247,6 @@ public class CPUTests
 
         Assert.Equal(val, _cpu.r[d]);
         Assert.Equal(address, _cpu.X);
-        Assert.Equal(101, _cpu.PC);
 
     }
 
@@ -264,7 +266,7 @@ public class CPUTests
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
-        Assert.Throws<UndifiendBehaviorException>(instruction.Executable);
+        Assert.Throws<UndefinedBehaviorException>(instruction.Executable);
     }
 
     [Theory]
@@ -283,7 +285,7 @@ public class CPUTests
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
-        Assert.Throws<UndifiendBehaviorException>(instruction.Executable);
+        Assert.Throws<UndefinedBehaviorException>(instruction.Executable);
     }
 
     [Theory]
@@ -310,7 +312,6 @@ public class CPUTests
 
         _ram.RAM[address] = val;
         _cpu.Y = address;
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -319,7 +320,6 @@ public class CPUTests
         instruction.Executable.Invoke();
 
         Assert.Equal(val, _cpu.r[d]);
-        Assert.Equal(101, _cpu.PC);
     }
 
     [Theory]
@@ -481,7 +481,6 @@ public class CPUTests
         instruction.Executable.Invoke();
 
         Assert.Equal(val, _cpu.r[d]);
-        Assert.Equal(101, _cpu.PC);
     }
 
     [Theory]
@@ -503,7 +502,6 @@ public class CPUTests
 
         _ram.RAM[address] = val;
         _cpu.Y = address;
-        _cpu.PC = 120;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -513,7 +511,6 @@ public class CPUTests
 
         Assert.Equal(val, _cpu.r[d]);
         Assert.Equal(address + 1, _cpu.Y);
-        Assert.Equal(121, _cpu.PC);
 
     }
 
@@ -536,7 +533,6 @@ public class CPUTests
 
         _ram.RAM[address] = val;
         _cpu.Y = (ushort)(address +1);
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -546,7 +542,6 @@ public class CPUTests
 
         Assert.Equal(val, _cpu.r[d]);
         Assert.Equal(address, _cpu.Y);
-        Assert.Equal(101, _cpu.PC);
 
     }
 
@@ -566,7 +561,7 @@ public class CPUTests
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
-        Assert.Throws<UndifiendBehaviorException>(instruction.Executable);
+        Assert.Throws<UndefinedBehaviorException>(instruction.Executable);
     }
 
     [Theory]
@@ -585,7 +580,7 @@ public class CPUTests
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
-        Assert.Throws<UndifiendBehaviorException>(instruction.Executable);
+        Assert.Throws<UndefinedBehaviorException>(instruction.Executable);
     }
 
     [Theory]
@@ -612,7 +607,6 @@ public class CPUTests
 
         _ram.RAM[address] = val;
         _cpu.Z = address;
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -622,7 +616,6 @@ public class CPUTests
         instruction.Executable.Invoke();
 
         Assert.Equal(val, _cpu.r[d]);
-        Assert.Equal(101, _cpu.PC);
     }
 
     [Theory]
@@ -775,7 +768,6 @@ public class CPUTests
 
         _ram.RAM[address + q] = val;
         _cpu.Z = address;
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -784,7 +776,6 @@ public class CPUTests
         instruction.Executable.Invoke();
 
         Assert.Equal(val, _cpu.r[d]);
-        Assert.Equal(101, _cpu.PC);
     }
    
     [Theory]
@@ -806,7 +797,6 @@ public class CPUTests
 
         _ram.RAM[address] = val;
         _cpu.Z = address;
-        _cpu.PC = 120;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -817,7 +807,6 @@ public class CPUTests
 
         Assert.Equal(val, _cpu.r[d]);
         Assert.Equal(address + 1, _cpu.Z);
-        Assert.Equal(121, _cpu.PC);
 
     }
 
@@ -840,7 +829,6 @@ public class CPUTests
 
         _ram.RAM[address] = val;
         _cpu.Z = (ushort)(address + 1);
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -851,7 +839,6 @@ public class CPUTests
 
         Assert.Equal(val, _cpu.r[d]);
         Assert.Equal(address, _cpu.Z);
-        Assert.Equal(101, _cpu.PC);
 
     }
 
@@ -871,7 +858,7 @@ public class CPUTests
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
-        Assert.Throws<UndifiendBehaviorException>(instruction.Executable);
+        Assert.Throws<UndefinedBehaviorException>(instruction.Executable);
     }
 
     [Theory]
@@ -888,7 +875,7 @@ public class CPUTests
         var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
-        Assert.Throws<UndifiendBehaviorException>(instruction.Executable);
+        Assert.Throws<UndefinedBehaviorException>(instruction.Executable);
     }
 
     [Fact]
@@ -984,7 +971,6 @@ public class CPUTests
         ushort val = 0xefcd;
         _flashMemory.Write(flashAddress, val);
         _cpu.Z = (ushort)zPointer;
-        _cpu.PC = 400;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -994,7 +980,7 @@ public class CPUTests
 
         Assert.Equal(0xcd, _cpu.r[d]);
         Assert.Equal(zPointer + 1, _cpu.Z); // check if Z incremented corectlly
-        Assert.Equal(401, _cpu.PC);
+        
 
         // try to fetch high byte
         // z alredy incremented
@@ -1021,7 +1007,7 @@ public class CPUTests
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
         
-        Assert.Throws<UndifiendBehaviorException>(instruction.Executable);
+        Assert.Throws<UndefinedBehaviorException>(instruction.Executable);
     }
 
     [Theory]
@@ -1050,7 +1036,6 @@ public class CPUTests
                 
         _ram.RAM[address] = val;
         _cpu.SP = (ushort)(address-1);
-        _cpu.PC = 102;
         _cpu.r[d] = 0;
 
         var instruction = _cpu.DecodeInstruction(opcode);
@@ -1059,7 +1044,6 @@ public class CPUTests
         instruction.Executable.Invoke();
         Assert.Equal(val, _cpu.r[d]);
         Assert.Equal(address, _cpu.SP);
-        Assert.Equal(103, _cpu.PC);
     }
 
     [Theory]
@@ -1089,7 +1073,7 @@ public class CPUTests
         _flashMemory.Write(flashAddress, opcode);
         _flashMemory.Write(flashAddress +1, k);
         _ram.Write(k, val);
-        _cpu.PC = flashAddress;
+        _cpu.PC = flashAddress+1;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -1146,7 +1130,6 @@ public class CPUTests
         _ram.RAM[address] = 0;
         _cpu.r[r] = val;
         _cpu.X = address;
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -1155,7 +1138,6 @@ public class CPUTests
         instruction.Executable.Invoke();
 
         Assert.Equal(_cpu.r[r], _ram.RAM[address]);
-        Assert.Equal(101, _cpu.PC);
     }
 
     [Theory]
@@ -1200,7 +1182,6 @@ public class CPUTests
         _ram.RAM[address] = 0;
         _cpu.r[r] = val;
         _cpu.X = address;
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -1210,7 +1191,6 @@ public class CPUTests
 
         Assert.Equal(val, _ram.RAM[address]);
         Assert.Equal(address + 1, _cpu.X);
-        Assert.Equal(101, _cpu.PC);
     }
 
     [Theory]
@@ -1231,7 +1211,7 @@ public class CPUTests
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
-        Assert.Throws<UndifiendBehaviorException>(instruction.Executable);
+        Assert.Throws<UndefinedBehaviorException>(instruction.Executable);
     }
 
     [Theory]
@@ -1276,7 +1256,6 @@ public class CPUTests
         _ram.RAM[address] = 0;
         _cpu.r[r] = val;
         _cpu.X = (ushort)(address + 1);
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -1286,7 +1265,6 @@ public class CPUTests
 
         Assert.Equal(val, _ram.RAM[address]);
         Assert.Equal(address, _cpu.X);
-        Assert.Equal(101, _cpu.PC);
     }
 
     [Theory]
@@ -1301,13 +1279,12 @@ public class CPUTests
         _ram.RAM[address] = 0;
         _cpu.r[r] = val;
         _cpu.X = (ushort)(address + 1);
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
-        Assert.Throws<UndifiendBehaviorException>(instruction.Executable);
+        Assert.Throws<UndefinedBehaviorException>(instruction.Executable);
     }
 
     [Theory]
@@ -1352,8 +1329,7 @@ public class CPUTests
         byte val = 0xcc;
         _cpu.SP = (ushort)address ;
         _cpu.r[r] = val;
-        _ram.RAM[address] = 0; 
-        _cpu.PC = 102;
+        _ram.RAM[address] = 0;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -1363,7 +1339,6 @@ public class CPUTests
 
         Assert.Equal(val, _ram.RAM[address]);
         Assert.Equal(address - 1, _cpu.SP);
-        Assert.Equal(103, _cpu.PC);
     }
 
     [Theory]
@@ -1408,7 +1383,6 @@ public class CPUTests
         _ram.RAM[address] = 0;
         _cpu.Y = address;
         _cpu.r[r] = val;
-        _cpu.PC = 120;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -1418,7 +1392,6 @@ public class CPUTests
 
         Assert.Equal(val, _ram.RAM[address]);
         Assert.Equal(address + 1, _cpu.Y);
-        Assert.Equal(121, _cpu.PC);
 
     }
 
@@ -1440,7 +1413,7 @@ public class CPUTests
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
-        Assert.Throws<UndifiendBehaviorException>(instruction.Executable);
+        Assert.Throws<UndefinedBehaviorException>(instruction.Executable);
     }
 
     [Theory]
@@ -1485,7 +1458,6 @@ public class CPUTests
         _ram.RAM[address] = 0;
         _cpu.Y = (ushort)(address + 1);
         _cpu.r[r] = val;
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -1495,7 +1467,6 @@ public class CPUTests
 
         Assert.Equal(val, _ram.RAM[address]);
         Assert.Equal(address, _cpu.Y);
-        Assert.Equal(101, _cpu.PC);
 
     }
 
@@ -1511,13 +1482,12 @@ public class CPUTests
         _ram.RAM[address] = 0;
         _cpu.Y = (ushort)(address + 1);
         _cpu.r[r] = val;
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
-        Assert.Throws<UndifiendBehaviorException>(instruction.Executable);
+        Assert.Throws<UndefinedBehaviorException>(instruction.Executable);
     }
 
     [Theory]
@@ -1563,7 +1533,6 @@ public class CPUTests
         _ram.RAM[address] = 0;
         _cpu.r[r] = val;
         _cpu.Y = address;
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -1572,7 +1541,6 @@ public class CPUTests
         instruction.Executable.Invoke();
 
         Assert.Equal(val, _ram.RAM[address]);
-        Assert.Equal(101, _cpu.PC);
     }
 
     [Theory]
@@ -1617,7 +1585,6 @@ public class CPUTests
         _ram.RAM[address] = 0;
         _cpu.r[r] = val;
         _cpu.Z = address;
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -1626,7 +1593,6 @@ public class CPUTests
         instruction.Executable.Invoke();
 
         Assert.Equal(val, _ram.RAM[address]);
-        Assert.Equal(101, _cpu.PC);
     }
 
     [Theory]
@@ -1671,7 +1637,6 @@ public class CPUTests
         _ram.RAM[address] = 0;
         _cpu.Z = address;
         _cpu.r[r] = val;
-        _cpu.PC = 120;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -1681,7 +1646,6 @@ public class CPUTests
 
         Assert.Equal(val, _ram.RAM[address]);
         Assert.Equal(address + 1, _cpu.Z);
-        Assert.Equal(121, _cpu.PC);
 
     }
 
@@ -1697,13 +1661,12 @@ public class CPUTests
         _ram.RAM[address] = 0;
         _cpu.Z = address;
         _cpu.r[r] = val;
-        _cpu.PC = 120;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
-        Assert.Throws<UndifiendBehaviorException>(instruction.Executable);
+        Assert.Throws<UndefinedBehaviorException>(instruction.Executable);
     }
 
     [Theory]
@@ -1748,7 +1711,6 @@ public class CPUTests
         _ram.RAM[address] = 0;
         _cpu.Z = (ushort)(address + 1);
         _cpu.r[r] = val;
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -1758,7 +1720,6 @@ public class CPUTests
 
         Assert.Equal(val, _ram.RAM[address]);
         Assert.Equal(address, _cpu.Z);
-        Assert.Equal(101, _cpu.PC);
 
     }
 
@@ -1780,7 +1741,7 @@ public class CPUTests
 
         Assert.Equal(Mnemonics, instruction.Mnemonics);
 
-        Assert.Throws<UndifiendBehaviorException>(instruction.Executable);
+        Assert.Throws<UndefinedBehaviorException>(instruction.Executable);
     }
 
     [Theory]
@@ -3747,7 +3708,6 @@ public class CPUTests
         _ram.RAM[address + q] = 0;
         _cpu.Y = address;
         _cpu.r[r] = val;
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -3756,7 +3716,6 @@ public class CPUTests
         instruction.Executable.Invoke();
 
         Assert.Equal(val, _ram.RAM[address + q]);
-        Assert.Equal(101, _cpu.PC);
     }
 
     [Theory]
@@ -5723,7 +5682,6 @@ public class CPUTests
         _ram.RAM[address + q] = 0;
         _cpu.Z = address;
         _cpu.r[r] = val;
-        _cpu.PC = 100;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -5732,7 +5690,6 @@ public class CPUTests
         instruction.Executable.Invoke();
 
         Assert.Equal(val, _ram.RAM[address + q]);
-        Assert.Equal(101, _cpu.PC);
     }
 
     [Theory]
@@ -5780,7 +5737,7 @@ public class CPUTests
         _flashMemory.Write(flashAddress + 1, k);
         _ram.RAM[k] = 0;
         _cpu.r[r] = val;
-        _cpu.PC = flashAddress;
+        _cpu.PC = flashAddress + 1;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
