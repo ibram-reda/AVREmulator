@@ -1,29 +1,13 @@
-﻿namespace AVREmulator;
+﻿using System.Collections.ObjectModel;
 
-public class FlashMemory
-{
-    public const int MEMORY_MAX_SIZE = 0xffff;
-    public UInt16[] Memory = new UInt16[MEMORY_MAX_SIZE];
+namespace AVREmulator;
 
-    /// <summary>
-    /// Read value from flash memory
-    /// </summary>
-    /// <param name="Address">the address of the flash memory</param>
-    /// <returns>the value in flash memory</returns>
-    public UInt16 Read(int Address)
+public class FlashMemory : Memory<UInt16>
+{  
+    public FlashMemory():base(0xffff)
     {
-        return Memory[Address];
     }
 
-    /// <summary>
-    /// Write value in flash memory
-    /// </summary>
-    /// <param name="Address">address in the flash memory</param>
-    /// <param name="DataValue">value to put in flash memory</param>
-    public void Write(int Address, UInt16 DataValue)
-    {
-        Memory[Address] = DataValue;
-    }
 
     public void Load(int startAddress, UInt16[] Data)
     {
@@ -33,13 +17,5 @@ public class FlashMemory
             Write(address++, data);
         }
     }
-    /// <summary>
-    /// flash should not reset ever
-    /// </summary>
-    public void Reset()
-    {
-        // do not delete the mrmory of the flash
-    }
-
     
 }

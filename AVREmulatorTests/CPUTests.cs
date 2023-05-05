@@ -174,7 +174,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
                 
-        _ram.RAM[address] = val;
+        _ram[address] = val;
         _cpu.X = address;
 
         var instruction = _cpu.DecodeInstruction(opcode);
@@ -203,7 +203,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = val;
+        _ram[address] = val;
         _cpu.X = address;
 
         var instruction = _cpu.DecodeInstruction(opcode);
@@ -234,7 +234,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = val;
+        _ram[address] = val;
         _cpu.X = address;
         _cpu.X++; // should be decrement to address afterr execution
         
@@ -259,7 +259,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = val;
+        _ram[address] = val;
         _cpu.X = address;
 
         var instruction = _cpu.DecodeInstruction(opcode);
@@ -278,7 +278,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = val;
+        _ram[address] = val;
         _cpu.X = address;
 
         var instruction = _cpu.DecodeInstruction(opcode);
@@ -310,7 +310,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = val;
+        _ram[address] = val;
         _cpu.Y = address;
 
         var instruction = _cpu.DecodeInstruction(opcode);
@@ -470,7 +470,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address +q] = val;
+        _ram[address +q] = val;
         _cpu.Y = address;
         _cpu.PC = 100;
 
@@ -500,7 +500,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = val;
+        _ram[address] = val;
         _cpu.Y = address;
 
         var instruction = _cpu.DecodeInstruction(opcode);
@@ -531,7 +531,7 @@ public class CPUTests
         int address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = val;
+        _ram[address] = val;
         _cpu.Y = (ushort)(address +1);
 
         var instruction = _cpu.DecodeInstruction(opcode);
@@ -554,7 +554,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = val;
+        _ram[address] = val;
         _cpu.Y = address;
 
         var instruction = _cpu.DecodeInstruction(opcode);
@@ -573,7 +573,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = val;
+        _ram[address] = val;
         _cpu.Y = address;
 
         var instruction = _cpu.DecodeInstruction(opcode);
@@ -605,7 +605,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = val;
+        _ram[address] = val;
         _cpu.Z = address;
 
         var instruction = _cpu.DecodeInstruction(opcode);
@@ -766,7 +766,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address + q] = val;
+        _ram[address + q] = val;
         _cpu.Z = address;
 
         var instruction = _cpu.DecodeInstruction(opcode);
@@ -795,7 +795,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = val;
+        _ram[address] = val;
         _cpu.Z = address;
 
         var instruction = _cpu.DecodeInstruction(opcode);
@@ -827,7 +827,7 @@ public class CPUTests
         int address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = val;
+        _ram[address] = val;
         _cpu.Z = (ushort)(address + 1);
 
         var instruction = _cpu.DecodeInstruction(opcode);
@@ -851,7 +851,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = val;
+        _ram[address] = val;
         _cpu.Z = address;
 
         var instruction = _cpu.DecodeInstruction(opcode);
@@ -869,7 +869,7 @@ public class CPUTests
         string Mnemonics = $"LD r{d}, -Z";
         ushort address = 0xff;
         byte val = 0xcc;        
-        _ram.RAM[address] = val;
+        _ram[address] = val;
         _cpu.Z = address;
 
         var instruction = _cpu.DecodeInstruction(opcode);
@@ -1034,7 +1034,7 @@ public class CPUTests
         int address = 100;
         byte val = 0xcc;
                 
-        _ram.RAM[address] = val;
+        _ram[address] = val;
         _cpu.SP = (ushort)(address-1);
         _cpu.r[d] = 0;
 
@@ -1127,7 +1127,7 @@ public class CPUTests
         ushort address = 0xcbc;
         byte val = 0xcc;
 
-        _ram.RAM[address] = 0;
+        _ram[address] = 0;
         _cpu.r[r] = val;
         _cpu.X = address;
 
@@ -1137,7 +1137,7 @@ public class CPUTests
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(_cpu.r[r], _ram.RAM[address]);
+        Assert.Equal(_cpu.r[r], _ram[address]);
     }
 
     [Theory]
@@ -1179,7 +1179,7 @@ public class CPUTests
         ushort address = 0xcbc;
         byte val = 0xcc;
 
-        _ram.RAM[address] = 0;
+        _ram[address] = 0;
         _cpu.r[r] = val;
         _cpu.X = address;
 
@@ -1189,7 +1189,7 @@ public class CPUTests
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, _ram.RAM[address]);
+        Assert.Equal(val, _ram[address]);
         Assert.Equal(address + 1, _cpu.X);
     }
 
@@ -1202,7 +1202,7 @@ public class CPUTests
         ushort address = 0xcbc;
         byte val = 0xcc;
 
-        _ram.RAM[address] = 0;
+        _ram[address] = 0;
         _cpu.r[r] = val;
         _cpu.X = address;
         _cpu.PC = 100;
@@ -1253,7 +1253,7 @@ public class CPUTests
         int address = 0xcbc;
         byte val = 0xcc;
 
-        _ram.RAM[address] = 0;
+        _ram[address] = 0;
         _cpu.r[r] = val;
         _cpu.X = (ushort)(address + 1);
 
@@ -1263,7 +1263,7 @@ public class CPUTests
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, _ram.RAM[address]);
+        Assert.Equal(val, _ram[address]);
         Assert.Equal(address, _cpu.X);
     }
 
@@ -1276,7 +1276,7 @@ public class CPUTests
         int address = 0xcbc;
         byte val = 0xcc;
 
-        _ram.RAM[address] = 0;
+        _ram[address] = 0;
         _cpu.r[r] = val;
         _cpu.X = (ushort)(address + 1);
 
@@ -1329,7 +1329,7 @@ public class CPUTests
         byte val = 0xcc;
         _cpu.SP = (ushort)address ;
         _cpu.r[r] = val;
-        _ram.RAM[address] = 0;
+        _ram[address] = 0;
 
         var instruction = _cpu.DecodeInstruction(opcode);
 
@@ -1337,7 +1337,7 @@ public class CPUTests
         
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, _ram.RAM[address]);
+        Assert.Equal(val, _ram[address]);
         Assert.Equal(address - 1, _cpu.SP);
     }
 
@@ -1380,7 +1380,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = 0;
+        _ram[address] = 0;
         _cpu.Y = address;
         _cpu.r[r] = val;
 
@@ -1390,7 +1390,7 @@ public class CPUTests
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, _ram.RAM[address]);
+        Assert.Equal(val, _ram[address]);
         Assert.Equal(address + 1, _cpu.Y);
 
     }
@@ -1404,7 +1404,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = 0;
+        _ram[address] = 0;
         _cpu.Y = address;
         _cpu.r[r] = val;
         _cpu.PC = 120;
@@ -1455,7 +1455,7 @@ public class CPUTests
         int address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = 0;
+        _ram[address] = 0;
         _cpu.Y = (ushort)(address + 1);
         _cpu.r[r] = val;
 
@@ -1465,7 +1465,7 @@ public class CPUTests
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, _ram.RAM[address]);
+        Assert.Equal(val, _ram[address]);
         Assert.Equal(address, _cpu.Y);
 
     }
@@ -1479,7 +1479,7 @@ public class CPUTests
         int address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = 0;
+        _ram[address] = 0;
         _cpu.Y = (ushort)(address + 1);
         _cpu.r[r] = val;
 
@@ -1530,7 +1530,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = 0;
+        _ram[address] = 0;
         _cpu.r[r] = val;
         _cpu.Y = address;
 
@@ -1540,7 +1540,7 @@ public class CPUTests
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, _ram.RAM[address]);
+        Assert.Equal(val, _ram[address]);
     }
 
     [Theory]
@@ -1582,7 +1582,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = 0;
+        _ram[address] = 0;
         _cpu.r[r] = val;
         _cpu.Z = address;
 
@@ -1592,7 +1592,7 @@ public class CPUTests
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, _ram.RAM[address]);
+        Assert.Equal(val, _ram[address]);
     }
 
     [Theory]
@@ -1634,7 +1634,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = 0;
+        _ram[address] = 0;
         _cpu.Z = address;
         _cpu.r[r] = val;
 
@@ -1644,7 +1644,7 @@ public class CPUTests
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, _ram.RAM[address]);
+        Assert.Equal(val, _ram[address]);
         Assert.Equal(address + 1, _cpu.Z);
 
     }
@@ -1658,7 +1658,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = 0;
+        _ram[address] = 0;
         _cpu.Z = address;
         _cpu.r[r] = val;
 
@@ -1708,7 +1708,7 @@ public class CPUTests
         int address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = 0;
+        _ram[address] = 0;
         _cpu.Z = (ushort)(address + 1);
         _cpu.r[r] = val;
 
@@ -1718,7 +1718,7 @@ public class CPUTests
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, _ram.RAM[address]);
+        Assert.Equal(val, _ram[address]);
         Assert.Equal(address, _cpu.Z);
 
     }
@@ -1732,7 +1732,7 @@ public class CPUTests
         int address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address] = 0;
+        _ram[address] = 0;
         _cpu.Z = (ushort)(address + 1);
         _cpu.r[r] = val;
         _cpu.PC = 100;
@@ -3705,7 +3705,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address + q] = 0;
+        _ram[address + q] = 0;
         _cpu.Y = address;
         _cpu.r[r] = val;
 
@@ -3715,7 +3715,7 @@ public class CPUTests
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, _ram.RAM[address + q]);
+        Assert.Equal(val, _ram[address + q]);
     }
 
     [Theory]
@@ -5679,7 +5679,7 @@ public class CPUTests
         ushort address = 0xff;
         byte val = 0xcc;
 
-        _ram.RAM[address + q] = 0;
+        _ram[address + q] = 0;
         _cpu.Z = address;
         _cpu.r[r] = val;
 
@@ -5689,7 +5689,7 @@ public class CPUTests
 
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, _ram.RAM[address + q]);
+        Assert.Equal(val, _ram[address + q]);
     }
 
     [Theory]
@@ -5735,7 +5735,7 @@ public class CPUTests
         int flashAddress = 100;
         _flashMemory.Write(flashAddress, opcode);
         _flashMemory.Write(flashAddress + 1, k);
-        _ram.RAM[k] = 0;
+        _ram[k] = 0;
         _cpu.r[r] = val;
         _cpu.PC = flashAddress + 1;
 
@@ -5746,7 +5746,7 @@ public class CPUTests
         Assert.Equal(2, instruction.Size);
         instruction.Executable.Invoke();
 
-        Assert.Equal(val, _ram.RAM[k]);
+        Assert.Equal(val, _ram[k]);
         Assert.Equal(flashAddress + 2, _cpu.PC);
     }
 

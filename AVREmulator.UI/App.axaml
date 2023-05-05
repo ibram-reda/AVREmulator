@@ -13,7 +13,8 @@
     <Application.Styles>
         <FluentTheme />
         <materialIcons:MaterialIconStyles />
-        <StyleInclude Source="/Assets/IconStyles.axaml"/>
+      <StyleInclude Source="/Assets/IconStyles.axaml"/>
+      <StyleInclude Source="/Assets/GloabalStyle.axaml"/>
       <StyleInclude Source="/Views/Controls/ControlsExport.axaml"/>
     </Application.Styles>
 </Application>

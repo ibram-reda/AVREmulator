@@ -2,9 +2,7 @@
 We will emulate each part of AVR controller separately. And the following is the basic and essential components
 1. CPU
 2. RAM
-3. ROM
-4. DATA Bus
-5. Program Bus
+3. Flash Memory (ROM)
 
 After we finish of building this basic component, then we will add other components which represent peripheral devices such as Timer,ADC,USRT,I2C,SPI,...etc
 

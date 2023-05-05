@@ -45,7 +45,7 @@ public partial class CPU
 	/// <summary>
 	/// array of general purpose registers r0-r31
 	/// </summary>
-	public readonly ArraySegment<byte> r ;
+	public readonly PartialObservableCollection<byte> r ;
     private readonly Ram _ram;
     private readonly FlashMemory _flashMemory;
 
@@ -84,19 +84,31 @@ public partial class CPU
 
     public UInt16 X
     {
-        get => BitConverter.ToUInt16(r.Array!, 26);
-		internal set => BitConverter.GetBytes(value).CopyTo(r.Array!, 26);
+        get => (UInt16)((r27<<8)+r26);
+		internal set
+        {
+            r26 = (byte)(value & 0xff);
+            r27 = (byte)(value>>8 & 0xff);
+		}
     }
     public UInt16 Y 
     {
-        get => BitConverter.ToUInt16(r.Array!, 28);
-		internal set => BitConverter.GetBytes(value).CopyTo(r.Array!, 28);
-    }
+		get => (UInt16)((r29 << 8) + r28);
+		internal set
+		{
+			r28 = (byte)(value & 0xff);
+			r29 = (byte)(value >> 8 & 0xff);
+		}
+	}
     public UInt16 Z 
-    { 
-        get => BitConverter.ToUInt16(r.Array!, 30);
-		internal set => BitConverter.GetBytes(value).CopyTo(r.Array!, 30); 
-    }
+    {
+		get => (UInt16)((r31 << 8) + r30);
+		internal set
+		{
+			r30 = (byte)(value & 0xff);
+			r31 = (byte)(value >> 8 & 0xff);
+		}
+	}
 	#endregion
 
 	#region ctor

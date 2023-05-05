@@ -17,6 +17,10 @@
     <AvaloniaResource Remove="Assets\IconStyles.axaml" />
   </ItemGroup>
 
+  <ItemGroup>
+    <AvaloniaXaml Remove="Assets\GloabalStyle.axaml" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.0.0-preview5" />
@@ -32,6 +36,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AVREmulator\AVREmulator.csproj" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <AvaloniaResource Update="Assets\GloabalStyle.axaml">
+      <SubType>Designer</SubType>
+    </AvaloniaResource>
   </ItemGroup>
 
 

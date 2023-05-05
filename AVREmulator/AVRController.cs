@@ -54,6 +54,5 @@ public class AVRController
     {
         _cpu.Reset();
         _ram.Reset();
-        _flashMemory.Reset();
     }
 }

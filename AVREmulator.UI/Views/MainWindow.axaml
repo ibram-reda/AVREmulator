@@ -7,7 +7,8 @@
         x:Class="AVREmulator.UI.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
-        
+        xmlns:Converters="using:AVREmulator.UI.Converters"
+
         Icon="/Assets/avalonia-logo.ico"
         Title="AVR Emulator"
         xmlns:local="using:AVREmulator.UI.Views"        
@@ -34,32 +35,69 @@
     <DockPanel>
       <Menu DockPanel.Dock="Top">
         <MenuItem Header="File">
-          <MenuItem Header="Load Hex File"/>
+          <MenuItem Header="Load Hex File" Command="{Binding OpenFileDialogCommand}"/>
           <Separator/>
-          <MenuItem Header="Exit"/>
+          <MenuItem Header="Exit" Command="{Binding CloseAppCommand}" />
         </MenuItem>
       </Menu>
 
       <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
-        <Button Classes="ToolbarIcon larg" Content="{materialIcons:MaterialIconExt Kind=Download}" ToolTip.Tip="Load Hex File" />
+        <Button Classes="ToolbarIcon larg"  Content="{materialIcons:MaterialIconExt Kind=Download}" ToolTip.Tip="Load Hex File" Command="{Binding OpenFileDialogCommand}" />
         <Button Classes="ToolbarIcon larg" IsEnabled="False" Foreground="Green" Content="{materialIcons:MaterialIconExt Kind=Play}" ToolTip.Tip="Run program" />
         <Button Classes="ToolbarIcon larg"  Content="{materialIcons:MaterialIconExt Kind=Stop}" ToolTip.Tip="Stop" />
         <Button Classes="ToolbarIcon larg"  Content="{materialIcons:MaterialIconExt Kind=Pause}" ToolTip.Tip="Pause" />
-        <Button Classes="ToolbarIcon larg"  Content="{materialIcons:MaterialIconExt Kind=Undo}" ToolTip.Tip="Next instruction" />
-        <Button Classes="ToolbarIcon larg"  Content="{materialIcons:MaterialIconExt Kind=Redo}" ToolTip.Tip="Previous instruction" />
+        <Button Classes="ToolbarIcon larg"  Content="{materialIcons:MaterialIconExt Kind=Undo}" ToolTip.Tip="Previous instruction" />
+        <Button Classes="ToolbarIcon larg"  Content="{materialIcons:MaterialIconExt Kind=Redo}" ToolTip.Tip="Next instruction" />
       </StackPanel>
 
-      <Border DockPanel.Dock="Left" Width="300" BoxShadow="5 5 10 2 black" Margin="10 10 20 10">
-       
+      <Border DockPanel.Dock="Left" 
+              Width="300" 
+              BoxShadow="5 5 10 2 black"
+              Margin="10 10 20 10">
+        <Grid RowDefinitions="auto,*">
+          
+          <TextBlock Text="Flash Memory"
+                     Classes="h2"
+                     TextAlignment="Center" />
+          
+          <ListBox Grid.Row="1" Items="{Binding Controller.FlashMemory.ActualMemory}">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <Border  CornerRadius="4" Padding="4">
+                  <TextBlock Text="{Binding .,StringFormat='0x{0:x4}'}"/>
+                </Border>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Grid>
       </Border>
+
+      <Border DockPanel.Dock="Right"
+             Width="300"
+             BoxShadow="5 5 10 2 black"
+             Margin="10 10 20 10">
+        <Grid RowDefinitions="auto,*">
+
+          <TextBlock Text="Ram"
+                     Classes="h2"
+                     TextAlignment="Center" />
+
+          <ListBox Grid.Row="1" Items="{Binding Controller.Ram.ActualMemory}">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <local:RegisterControl RegName="" RegValue="{Binding}"/>
+
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Grid>
+      </Border>
+      
       <Grid RowDefinitions="50,*" Margin="10 10 20 10">
-        <TextBlock TextAlignment="Center" Text="AVR Registers"/>
+        <TextBlock TextAlignment="Center" Text="Working Area"/>
         <StackPanel Grid.Row="1" Spacing="5">
-          <local:RegisterControl Classes="wide" RegName="PC Reg" RegValue="257" />
-          <local:RegisterControl Classes="wide" RegName="SP Reg" RegValue="257" />
-          <local:RegisterControl RegName="Status Reg"/>
-          <local:RegisterControl />
-          <local:RegisterControl />
+          <TextBox Text="{Binding HexFilePath,FallbackValue='Hex file location'}" IsReadOnly="True"/>
+         
         </StackPanel>
         
       </Grid>
